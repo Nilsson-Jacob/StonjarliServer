@@ -2,10 +2,13 @@ const express = require("express");
 require("dotenv").config();
 const axios = require("axios");
 
+const cors = require("cors");
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
+app.use(cors()); // You can pass options to restrict allowed origins
 
 app.get("/test", (req, res) => {
   res.send("✅ Test route working");
@@ -37,6 +40,10 @@ app.get("/account", async (req, res) => {
   }
 });
 
+app.get("/echo", async (req, res) => {
+  res.send("This is what you sent: " + req.body);
+});
+
 app.post("/buy", async (req, res) => {
   const { symbol, qty } = req.body;
 
@@ -63,5 +70,106 @@ app.post("/buy", async (req, res) => {
     res
       .status(500)
       .json({ error: "Order submission failed", details: err.response?.data });
+  }
+});
+
+app.get("/earnings", async (req, res) => {
+  const baseURL = "https://finnhub.io/api/v1";
+  const apiKey = "cupln21r01qk8dnkqkcgcupln21r01qk8dnkqkd0";
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const to = yesterday.toISOString().split("T")[0];
+
+  const from = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // past 1 day
+    .toISOString()
+    .split("T")[0];
+
+  try {
+    const res = await axios.get(`${baseURL}/calendar/earnings`, {
+      params: {
+        from,
+        to,
+        token: apiKey,
+      },
+    });
+
+    const raw = res.data.earningsCalendar || [];
+    console.log("Fetched earnings count:", raw.length);
+
+    const filtered = await Promise.all(
+      raw.map(async (entry) => {
+        const surpriseRatio = entry.epsActual / entry.epsEstimate;
+
+        // Basic EPS check
+        if (!entry.epsActual || !entry.epsEstimate || surpriseRatio <= 1.1)
+          return false;
+
+        // Only include AMC/BMO (after-market or before-market)
+        if (entry.hour !== "amc" && entry.hour !== "bmo") return false;
+        else return true;
+      })
+    );
+    // Fetch price, volume, market cap
+    /* try {
+          const quoteRes = await axios.get(`${baseURL}/quote`, {
+            params: { symbol: entry.symbol, token: apiKey },
+          });
+
+          const profileRes = await axios.get(`${baseURL}/stock/profile2`, {
+            params: { symbol: entry.symbol, token: apiKey },
+          });
+
+          const price = quoteRes.data.c;
+          const marketCap = profileRes.data.marketCapitalization;
+
+          if (
+            price > 5 &&
+            marketCap > 500 // in millions
+          ) {
+            const opportunity = {
+              ...entry,
+              price,
+              comparisonEPS: surpriseRatio,
+              buyDate: new Date().toISOString().split("T")[0],
+            };
+
+            const saved = JSON.parse(localStorage.getItem("savedStocks")) || [];
+            const exists = saved.find((item) => item.symbol === entry.symbol);
+
+            if (!exists) {
+              saved.push(opportunity);
+              localStorage.setItem("savedStocks", JSON.stringify(saved));
+            }
+
+            return {
+              ...entry,
+              price,
+              marketCap,
+              comparisonEPS: surpriseRatio,
+            };
+          }
+
+          return false;
+        } catch (err) {
+          console.warn(
+            `Error fetching details for ${entry.symbol}:`,
+            err.message
+          );
+          return false;
+        }
+      })
+    );*/
+    /* return {
+      ...entry,
+      comparisonEPS: surpriseRatio,
+    };
+  }
+  );*/
+
+    res.send(filtered.filter((e) => e));
+  } catch (err) {
+    console.error("Error fetching earnings from Finnhub:", err.message);
+    res.send([]);
   }
 });
