@@ -104,7 +104,7 @@ async function getBuyDate(symbol) {
 }
 
 // Express route
-router.get("/buydate", async (req, res) => {
+app.get("/buydate", async (req, res) => {
   const { symbol } = req.query;
 
   if (!symbol) {
