@@ -44,6 +44,31 @@ app.get("/echo", async (req, res) => {
   res.send("This is what you sent: " + req.body);
 });
 
+app.get("/positions", async (req, res) => {
+  try {
+    const response = await alpaca.get("/v2/positions");
+
+    // For now.
+    if (response.data.length == 0) {
+      res.status(200).json({
+        data: [{ symbol: "AAPL" }, { symbol: "AMEX" }],
+      });
+    } else {
+      res.status(200).json({
+        data: response.data,
+      });
+    }
+  } catch (err) {
+    console.error(
+      "❌ Failed to get positions",
+      err.response?.data || err.message
+    );
+    res
+      .status(500)
+      .json({ error: "Failed to get positions", details: err.response?.data });
+  }
+});
+
 app.post("/buy", async (req, res) => {
   const { symbol, qty } = req.body;
 
