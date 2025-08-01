@@ -33,13 +33,14 @@ async function runPEADStrategy() {
 
   const raw = earningsRes.data.earningsCalendar || [];
 
-  const filtered = raw.filter(
-    (e) =>
-      e.epsActual &&
-      e.epsEstimate &&
-      e.epsActual / e.epsEstimate > 1.1 &&
-      (e.hour === "amc" || e.hour === "bmo")
-  );
+  const filtered = raw.filter((e) => {
+    const { epsActual, epsEstimate } = e;
+    if (!epsActual || !epsEstimate || epsActual <= 0 || epsEstimate <= 0) {
+      return false;
+    }
+    const surprise = epsActual / epsEstimate;
+    return surprise > 1.1;
+  });
 
   const qualified = [];
 
