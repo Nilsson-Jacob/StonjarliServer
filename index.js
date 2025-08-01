@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 const runPEADStrategy = require("./scripts/RunPEADStrategy");
-const runHiddenSpikeStrategy = require("./scripts/hiddenSpikeStrategy");
+const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
