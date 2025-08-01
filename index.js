@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 const runPEADStrategy = require("./scripts/RunPEADStrategy");
+const runHiddenSpikeStrategy = require("./scripts/hiddenSpikeStrategy");
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
@@ -130,6 +131,12 @@ app.get("/runpead", async (req, res) => {
     //res.status(500).json({ error: "Failed to run PEAD strategy" });
     res.send("Could not run PEAD, is market closed? : " + error);
   }
+});
+
+app.get("/runhis", async (req, res) => {
+  const watchlist = ["JOBY", "TSLA", "AAPL"]; // replace or expand
+  const picks = await runHiddenSpikeStrategy(watchlist);
+  res.json({ picks });
 });
 
 app.post("/buy", async (req, res) => {
