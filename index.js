@@ -7,6 +7,8 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+import runPEADStrategy from "./scripts/RunPEADStrategy";
+
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
 
@@ -38,10 +40,6 @@ app.get("/account", async (req, res) => {
     console.error("Alpaca API error:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch Alpaca account info" });
   }
-});
-
-app.get("/echo", async (req, res) => {
-  res.send("This is what you sent: " + req.body);
 });
 
 app.get("/positions", async (req, res) => {
@@ -120,6 +118,16 @@ app.get("/buydate", async (req, res) => {
     return res.json({ symbol, buyDate });
   } catch (error) {
     return res.status(500).json({ error: "Failed to retrieve buy date" });
+  }
+});
+
+app.get("/runpead", async (req, res) => {
+  try {
+    await runPEADStrategy();
+    res.json({ message: "PEAD strategy run successfully" });
+  } catch (error) {
+    console.error("Error running PEAD strategy:", error);
+    res.status(500).json({ error: "Failed to run PEAD strategy" });
   }
 });
 
