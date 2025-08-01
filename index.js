@@ -7,7 +7,7 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-import runPEADStrategy from "./scripts/RunPEADStrategy";
+const runPEADStrategy = require("./scripts/RunPEADStrategy");
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
