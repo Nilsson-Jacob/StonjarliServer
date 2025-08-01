@@ -127,7 +127,8 @@ app.get("/runpead", async (req, res) => {
     res.json({ message: "PEAD strategy run successfully" });
   } catch (error) {
     console.error("Error running PEAD strategy:", error);
-    res.status(500).json({ error: "Failed to run PEAD strategy" });
+    //res.status(500).json({ error: "Failed to run PEAD strategy" });
+    res.send("Could not run PEAD, is market closed? : " + error);
   }
 });
 
