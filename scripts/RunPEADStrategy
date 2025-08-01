@@ -68,7 +68,7 @@ async function runPEADStrategy() {
 
   const topPick = qualified
     .sort((a, b) => b.comparisonEPS - a.comparisonEPS)
-    .slice(0, 1);
+    .slice(0, 4);
 
   for (const stock of topPick) {
     console.log("Buying:", stock.symbol);
@@ -85,11 +85,11 @@ async function runPEADStrategy() {
         },
         { headers }
       );
-
-      console.log("✅ Bought:", stock.symbol);
     } catch (e) {
       console.error("❌ Failed to buy", stock.symbol, e.message);
     }
+
+    return "Sent orders for: " + topPick.map((e) => e.symbol);
   }
 }
 
