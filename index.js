@@ -123,8 +123,8 @@ app.get("/buydate", async (req, res) => {
 
 app.get("/runpead", async (req, res) => {
   try {
-    await runPEADStrategy();
-    res.json({ message: "PEAD strategy run successfully" });
+    const response = await runPEADStrategy();
+    res.send(response);
   } catch (error) {
     console.error("Error running PEAD strategy:", error);
     //res.status(500).json({ error: "Failed to run PEAD strategy" });
@@ -199,61 +199,6 @@ app.get("/earnings", async (req, res) => {
       })
     );
     // Fetch price, volume, market cap
-    /* try {
-          const quoteRes = await axios.get(`${baseURL}/quote`, {
-            params: { symbol: entry.symbol, token: apiKey },
-          });
-
-          const profileRes = await axios.get(`${baseURL}/stock/profile2`, {
-            params: { symbol: entry.symbol, token: apiKey },
-          });
-
-          const price = quoteRes.data.c;
-          const marketCap = profileRes.data.marketCapitalization;
-
-          if (
-            price > 5 &&
-            marketCap > 500 // in millions
-          ) {
-            const opportunity = {
-              ...entry,
-              price,
-              comparisonEPS: surpriseRatio,
-              buyDate: new Date().toISOString().split("T")[0],
-            };
-
-            const saved = JSON.parse(localStorage.getItem("savedStocks")) || [];
-            const exists = saved.find((item) => item.symbol === entry.symbol);
-
-            if (!exists) {
-              saved.push(opportunity);
-              localStorage.setItem("savedStocks", JSON.stringify(saved));
-            }
-
-            return {
-              ...entry,
-              price,
-              marketCap,
-              comparisonEPS: surpriseRatio,
-            };
-          }
-
-          return false;
-        } catch (err) {
-          console.warn(
-            `Error fetching details for ${entry.symbol}:`,
-            err.message
-          );
-          return false;
-        }
-      })
-    );*/
-    /* return {
-      ...entry,
-      comparisonEPS: surpriseRatio,
-    };
-  }
-  );*/
 
     res.send(filtered.filter((e) => e));
   } catch (err) {
