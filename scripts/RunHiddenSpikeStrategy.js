@@ -1,4 +1,5 @@
 const axios = require("axios");
+const regimeFilter = require("../filters/RegimeFilter");
 
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 const ALPACA_KEY = process.env.ALPACA_API_KEY;
@@ -111,9 +112,10 @@ async function runHiddenSpikeStrategy() {
 
   // Sort by percent gain
   qualified.sort((a, b) => b.pct - a.pct);
-  const top = qualified.slice(0, 1); // buy only first spike
+  const top = qualified.slice(0, 5); // buy only first spike
+  const filteredTop = regimeFilter(top);
 
-  for (const pick of top) {
+  for (const pick of filteredTop) {
     console.log("Buying spike:", pick.symbol);
     try {
       await axios.post(
