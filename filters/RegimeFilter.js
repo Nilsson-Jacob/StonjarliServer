@@ -1,97 +1,105 @@
 const axios = require("axios");
+const FRED_API_KEY = process.env.FRED_API_KEY;
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
-// Your FRED API key here
-const FRED_API_KEY = "YOUR_FRED_API_KEY";
-
-// Fetch latest value and value 3 months ago for a given series
-async function fetchFredData(seriesId) {
-  const today = new Date();
-  const endDate = today.toISOString().slice(0, 10);
-  // 3 months ago
-  const pastDate = new Date(today.setMonth(today.getMonth() - 3))
+// --- FRED-based regime determination ---
+async function fetchFred(seriesId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const past = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
 
-  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${FRED_API_KEY}&file_type=json&observation_start=${pastDate}&observation_end=${endDate}`;
+  const { data } = await axios.get(
+    "https://api.stlouisfed.org/fred/series/observations",
+    {
+      params: {
+        series_id: seriesId,
+        api_key: FRED_API_KEY,
+        file_type: "json",
+        observation_start: past,
+        observation_end: today,
+      },
+    }
+  );
 
-  try {
-    const response = await axios.get(url);
-    const observations = response.data.observations;
-
-    // Find the latest valid observation (most recent non-null value)
-    const latest = [...observations].reverse().find((obs) => obs.value !== ".");
-
-    // Find the earliest valid observation (around 3 months ago)
-    const earliest = observations.find((obs) => obs.value !== ".");
-
-    return {
-      latest: parseFloat(latest.value),
-      past: parseFloat(earliest.value),
-    };
-  } catch (error) {
-    console.error(`Failed to fetch FRED data for ${seriesId}`, error.message);
-    return null;
-  }
+  const obs = data.observations.filter((o) => o.value !== ".");
+  const latest = parseFloat(obs.at(-1).value);
+  const previous = parseFloat(obs.at(0).value);
+  return { latest, previous };
 }
 
-// Determine regime based on interest rate and balance sheet trends
 async function getCurrentRegime() {
-  const interestRateData = await fetchFredData("DFF"); // Fed Funds Effective Rate
-  const balanceSheetData = await fetchFredData("WALCL"); // Fed Total Assets
+  const rateData = await fetchFred("DFF");
+  const bsData = await fetchFred("WALCL");
+  if (!rateData || !bsData) return "Q2";
 
-  if (!interestRateData || !balanceSheetData) {
-    console.warn("Using default regime Q2 due to missing data");
-    return "Q2"; // Default fallback regime
-  }
+  const rateUp = rateData.latest > rateData.previous;
+  const bsUp = bsData.latest > bsData.previous;
 
-  const interestRateUp = interestRateData.latest > interestRateData.past;
-  const balanceSheetUp = balanceSheetData.latest > balanceSheetData.past;
-
-  // Regimes explained:
-  // Q1: Interest rate down, balance sheet up (easy money, QE on)
-  // Q2: Interest rate down, balance sheet down (rate cuts, no QE)
-  // Q3: Interest rate up, balance sheet up (rate hikes with QE)
-  // Q4: Interest rate up, balance sheet down (tightening)
-
-  if (!interestRateUp && balanceSheetUp) return "Q1";
-  if (!interestRateUp && !balanceSheetUp) return "Q2";
-  if (interestRateUp && balanceSheetUp) return "Q3";
-  if (interestRateUp && !balanceSheetUp) return "Q4";
-
-  // fallback
-  return "Q2";
+  if (!rateUp && bsUp) return "Q1";
+  if (!rateUp && !bsUp) return "Q2";
+  if (rateUp && bsUp) return "Q3";
+  return "Q4";
 }
 
-// Classify growth type (same as before)
+// --- Finnhub enrichment ---
+async function enrichStockMetrics(stock) {
+  try {
+    const res = await axios.get("https://finnhub.io/api/v1/stock/metric", {
+      params: { symbol: stock.symbol, metric: "all", token: FINNHUB_API_KEY },
+    });
+    const m = res.data.metric;
+    return {
+      peRatio: m.peNormalizedAnnual || null,
+      revenueGrowth: m.revenueGrowthTTMYoy || null,
+      debtRatio: m.totalDebt && m.ebitda ? m.totalDebt / m.ebitda : null,
+    };
+  } catch (err) {
+    console.warn("Metric fetch failed for", stock.symbol, err.message);
+    return { peRatio: null, revenueGrowth: null, debtRatio: null };
+  }
+}
+
+// --- Growth classification ---
 function classifyGrowthType(stock) {
   if (stock.revenueGrowth > 0.2 && stock.peRatio > 30) return "aggressive";
   if (stock.revenueGrowth > 0.1) return "moderate";
   return "value";
 }
 
-// Main filter function — async because of API calls
-async function regimeFilter(stocks) {
+// --- Main filter function ---
+async function regimeFilter(topPicks) {
   const regime = await getCurrentRegime();
-  console.log(`Current Regime: ${regime}`);
+  console.log("Detected regime:", regime);
 
-  const enriched = stocks.map((stock) => ({
-    ...stock,
-    growthType: classifyGrowthType(stock),
-  }));
-
-  let filteredStocks;
-
-  if (regime === "Q1") {
-    filteredStocks = enriched.filter((s) => s.growthType === "aggressive");
-  } else if (regime === "Q4") {
-    filteredStocks = enriched.filter((s) => s.debtRatio < 1 && s.peRatio < 15);
-  } else {
-    filteredStocks = enriched.filter(
-      (s) => s.growthType === "moderate" || s.growthType === "value"
-    );
+  // Enrich each pick with metrics and class
+  const enrichedList = [];
+  for (const pick of topPicks) {
+    const metrics = await enrichStockMetrics(pick);
+    enrichedList.push({
+      ...pick,
+      ...metrics,
+      growthType: classifyGrowthType(metrics),
+    });
   }
 
-  return filteredStocks.slice(0, 5);
+  // Filter by regime logic
+  let filtered;
+  switch (regime) {
+    case "Q1":
+      filtered = enrichedList.filter((s) => s.growthType === "aggressive");
+      break;
+    case "Q4":
+      filtered = enrichedList.filter((s) => s.debtRatio < 1 && s.peRatio < 15);
+      break;
+    default:
+      filtered = enrichedList.filter(
+        (s) => s.growthType === "moderate" || s.growthType === "value"
+      );
+  }
+
+  console.log(`Filtered ${topPicks.length} → ${filtered.length}`);
+  return filtered;
 }
 
 module.exports = regimeFilter;
