@@ -69,12 +69,13 @@ async function runPEADStrategy() {
     }
   }
 
-  const topPick = qualified.sort((a, b) => b.comparisonEPS - a.comparisonEPS);
-  //   .slice(0, 5);
-  const filteredPick = await regimeFilter(topPick);
+  const topPick = qualified
+    .sort((a, b) => b.comparisonEPS - a.comparisonEPS)
+    .slice(0, 5);
+  //const filteredPick = await regimeFilter(topPick);
 
   //for (const stock of topPick) {
-  for (const stock of filteredPick) {
+  for (const stock of topPick) {
     console.log("Buying:", stock.symbol);
 
     try {
@@ -93,8 +94,8 @@ async function runPEADStrategy() {
       console.error("❌ Failed to buy", stock.symbol, e.message);
     }
   }
-  //return "Sent orders for: " + topPick.map((e) => e.symbol);
-  return "Sent orders for: " + filteredPick.map((e) => e.symbol);
+  return "Sent orders for: " + topPick.map((e) => e.symbol);
+  //return "Sent orders for: " + filteredPick.map((e) => e.symbol);
 }
 
 module.exports = runPEADStrategy;
