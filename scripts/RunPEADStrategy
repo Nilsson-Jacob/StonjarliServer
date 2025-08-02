@@ -71,7 +71,7 @@ async function runPEADStrategy() {
 
   const topPick = qualified.sort((a, b) => b.comparisonEPS - a.comparisonEPS);
   //   .slice(0, 5);
-  const filteredPick = regimeFilter(topPick);
+  const filteredPick = await regimeFilter(topPick);
 
   //for (const stock of topPick) {
   for (const stock of filteredPick) {
