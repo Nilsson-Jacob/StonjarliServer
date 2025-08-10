@@ -71,20 +71,20 @@ app.get("/positions", async (req, res) => {
 // Utility: Get latest buy order fill date for a symbol
 async function getBuyDate(symbol) {
   try {
-    const response = await axios.get(`${BASE_URL}/v2/orders`, {
+    const response = await axios.get(`${BASE_URL}/v2/orders?status=closed`, {
       headers,
       params: {
         status: "closed",
-        limit: 100,
-        direction: "desc",
-        symbols: symbol, // Optional filter if Alpaca supports it
+        //limit: 100,
+        //direction: "desc",
+        //symbols: symbol, // Optional filter if Alpaca supports it
       },
     });
 
     const orders = response.data;
 
     // Filter for buy orders only for the given symbol and with a filled timestamp
-    const buyOrders = orders
+    /*const buyOrders = orders
       .filter(
         (o) =>
           o.symbol.toUpperCase() === symbol.toUpperCase() &&
@@ -95,7 +95,8 @@ async function getBuyDate(symbol) {
 
     if (buyOrders.length === 0) return null;
 
-    return buyOrders[0].filled_at;
+    return buyOrders[0].filled_at;*/
+    return orders;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
@@ -104,19 +105,13 @@ async function getBuyDate(symbol) {
 
 // Express route
 app.get("/buydate", async (req, res) => {
-  const { symbol } = req.query;
-
-  if (!symbol) {
-    return res.status(400).json({ error: "Symbol parameter is required" });
-  }
-
   try {
-    const buyDate = await getBuyDate(symbol);
+    const closedOrders = await getBuyDate();
     if (!buyDate) {
       return res.status(404).json({ message: "No buy order found for symbol" });
     }
 
-    return res.json({ symbol, buyDate });
+    return res.json(closedOrders);
   } catch (error) {
     return res.status(500).json({ error: "Failed to retrieve buy date" });
   }
