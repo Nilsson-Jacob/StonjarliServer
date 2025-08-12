@@ -113,7 +113,7 @@ app.get("/buydate", async (req, res) => {
 
     return res.json(closedOrders);
   } catch (error) {
-    return res.status(500).json({ error: "Failed to retrieve buy date" });
+    res.send(error);
   }
 });
 
