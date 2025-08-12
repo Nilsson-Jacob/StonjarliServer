@@ -69,7 +69,7 @@ app.get("/positions", async (req, res) => {
 });
 
 // Utility: Get latest buy order fill date for a symbol
-async function getBuyDate(symbol) {
+async function getBuyDate() {
   try {
     const response = await axios.get(`${BASE_URL}/v2/orders?status=closed`, {
       headers,
