@@ -73,12 +73,6 @@ async function getBuyDate() {
   try {
     const response = await axios.get(`${BASE_URL}/v2/orders?status=closed`, {
       headers,
-      /*params: {
-        status: "closed",
-        //limit: 100,
-        //direction: "desc",
-        //symbols: symbol, // Optional filter if Alpaca supports it
-      },*/
     });
 
     //const orders = response.data;
@@ -107,6 +101,9 @@ async function getBuyDate() {
 app.get("/buydate", async (req, res) => {
   try {
     const closedOrders = await getBuyDate();
+
+    console.log("in buydate with response: " + closedOrders);
+
     if (!closedOrders) {
       return res.send([]);
     }
