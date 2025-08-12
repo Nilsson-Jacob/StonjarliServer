@@ -75,22 +75,7 @@ async function getBuyDate() {
       headers,
     });
 
-    //const orders = response.data;
-
-    // Filter for buy orders only for the given symbol and with a filled timestamp
-    /*const buyOrders = orders
-      .filter(
-        (o) =>
-          o.symbol.toUpperCase() === symbol.toUpperCase() &&
-          o.side === "buy" &&
-          o.filled_at
-      )
-      .sort((a, b) => new Date(b.filled_at) - new Date(a.filled_at)); // most recent first
-
-    if (buyOrders.length === 0) return null;
-
-    return buyOrders[0].filled_at;*/
-    return response.data;
+    return response;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
@@ -103,10 +88,6 @@ app.get("/buydate", async (req, res) => {
     const closedOrders = await getBuyDate();
 
     console.log("in buydate with response: " + closedOrders);
-
-    if (!closedOrders) {
-      return res.send([]);
-    }
 
     return res.send(closedOrders);
   } catch (error) {
@@ -126,8 +107,7 @@ app.get("/runpead", async (req, res) => {
 });
 
 app.get("/runhis", async (req, res) => {
-  const watchlist = ["JOBY", "TSLA", "AAPL"]; // replace or expand
-  const picks = await runHiddenSpikeStrategy(watchlist);
+  const picks = await runHiddenSpikeStrategy();
   res.json({ picks });
 });
 
