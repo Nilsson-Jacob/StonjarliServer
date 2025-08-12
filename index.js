@@ -73,15 +73,15 @@ async function getBuyDate(symbol) {
   try {
     const response = await axios.get(`${BASE_URL}/v2/orders?status=closed`, {
       headers,
-      params: {
+      /*params: {
         status: "closed",
         //limit: 100,
         //direction: "desc",
         //symbols: symbol, // Optional filter if Alpaca supports it
-      },
+      },*/
     });
 
-    const orders = response.data;
+    //const orders = response.data;
 
     // Filter for buy orders only for the given symbol and with a filled timestamp
     /*const buyOrders = orders
@@ -96,7 +96,7 @@ async function getBuyDate(symbol) {
     if (buyOrders.length === 0) return null;
 
     return buyOrders[0].filled_at;*/
-    return orders;
+    return response;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
