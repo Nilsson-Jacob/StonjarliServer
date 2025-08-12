@@ -75,7 +75,7 @@ async function getBuyDate() {
       headers,
     });
 
-    return response;
+    return response.data;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
