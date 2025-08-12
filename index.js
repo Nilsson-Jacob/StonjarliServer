@@ -96,7 +96,7 @@ async function getBuyDate(symbol) {
     if (buyOrders.length === 0) return null;
 
     return buyOrders[0].filled_at;*/
-    return response;
+    return response.data;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
@@ -111,7 +111,7 @@ app.get("/buydate", async (req, res) => {
       return res.send([]);
     }
 
-    return res.json(closedOrders);
+    return res.send(closedOrders);
   } catch (error) {
     res.send(error);
   }
