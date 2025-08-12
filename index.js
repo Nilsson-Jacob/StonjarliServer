@@ -107,8 +107,8 @@ async function getBuyDate(symbol) {
 app.get("/buydate", async (req, res) => {
   try {
     const closedOrders = await getBuyDate();
-    if (!buyDate) {
-      return res.status(404).json({ message: "No buy order found for symbol" });
+    if (!closedOrders) {
+      return res.send([]);
     }
 
     return res.json(closedOrders);
