@@ -70,6 +70,8 @@ app.get("/positions", async (req, res) => {
 
 // Utility: Get latest buy order fill date for a symbol
 async function getBuyDate() {
+  const BASE_URL = process.env.ALPACA_BASE_URL;
+
   try {
     const response = await axios.get(`${BASE_URL}/v2/orders?status=closed`, {
       headers,
