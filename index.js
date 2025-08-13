@@ -73,9 +73,7 @@ async function getBuyDate() {
   const BASE_URL = process.env.ALPACA_BASE_URL;
 
   try {
-    const response = await axios.get(`${BASE_URL}/v2/orders?status=closed`, {
-      headers,
-    });
+    const response = await alpaca.get(`${BASE_URL}/v2/orders?status=closed`);
 
     return response.data;
   } catch (err) {
@@ -91,7 +89,7 @@ app.get("/buydate", async (req, res) => {
 
     console.log("in buydate with response: " + closedOrders);
 
-    res.send({ test: "ORDER" });
+    res.send("not error");
   } catch (error) {
     res.send("there was error");
   }
