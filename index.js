@@ -89,7 +89,7 @@ app.get("/buydate", async (req, res) => {
 
     console.log("in buydate with response: " + closedOrders);
 
-    return res.send(closedOrders);
+    return res.send({ HEj: "ORDER" });
   } catch (error) {
     res.send(error);
   }
