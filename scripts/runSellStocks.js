@@ -65,7 +65,7 @@ async function runSellStocks() {
     let buyDate;
     const todaysDate = new Date();
 
-    aPositions.forEach(async (stock) => {
+    const promises = aPositions.forEach(async (stock) => {
       const oMatch = symbolMap.get(stock.symbol);
       if (oMatch) {
         buyDate = oMatch.filled_at.substring(0, 10);
@@ -121,6 +121,8 @@ async function runSellStocks() {
         }
       }
     });
+
+    await Promise.all(promises);
 
     return aVerdict;
   } catch (error) {
