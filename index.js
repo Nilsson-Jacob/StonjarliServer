@@ -7,8 +7,10 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const runPEADStrategy = require("./scripts/RunPEADStrategy");
+const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
+const sellStock = require("");
+const runSellStocks = require("./scripts/runSellStocks.js");
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
@@ -109,6 +111,25 @@ app.get("/runpead", async (req, res) => {
 app.get("/runhis", async (req, res) => {
   const picks = await runHiddenSpikeStrategy();
   res.json({ picks });
+});
+
+app.get("/runStrat", async (req, res) => {
+  try {
+    const aPeadStrat = await runPEADStrategy();
+    const aHSS = await runHiddenSpikeStrategy();
+    const aSellOrders = await runSellStocks();
+
+    let response = {
+      pead: aPeadStrat,
+      hss: aHSS,
+      sellOrders: aSellOrders,
+    };
+    res.send(response);
+  } catch (error) {
+    console.error("Error running strategy", error);
+    //res.status(500).json({ error: "Failed to run PEAD strategy" });
+    res.send("Could not run strategy : " + error);
+  }
 });
 
 app.post("/buy", async (req, res) => {

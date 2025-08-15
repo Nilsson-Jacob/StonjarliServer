@@ -52,6 +52,7 @@ const symbols = [
   "MDB",
   "SHOP",
   "COIN",
+  "PLTR",
 
   // Consumer / Surprise movers
   "CVNA",
@@ -122,7 +123,7 @@ async function runHiddenSpikeStrategy() {
         `${ALPACA_URL}/v2/orders`,
         {
           symbol: pick.symbol,
-          qty: 1,
+          qty: 3,
           side: "buy",
           type: "market",
           time_in_force: "gtc",
