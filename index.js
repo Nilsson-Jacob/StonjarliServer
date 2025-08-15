@@ -11,6 +11,8 @@ const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
 const runSellStocks = require("./scripts/runSellStocks.js");
 
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
 
@@ -115,8 +117,13 @@ app.get("/runhis", async (req, res) => {
 app.get("/runStrat", async (req, res) => {
   try {
     const aPeadStrat = await runPEADStrategy();
+    await delay(1200); // prevent rate limit
+
     const aHSS = await runHiddenSpikeStrategy();
+    await delay(1200); // prevent rate limit
+
     const aSellOrders = await runSellStocks();
+    await delay(1200); // prevent rate limit
 
     let response = {
       pead: aPeadStrat,

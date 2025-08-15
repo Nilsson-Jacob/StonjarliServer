@@ -94,7 +94,7 @@ async function runSellStocks() {
         const currentPrice = parseFloat(stock.current_price);
         const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
 
-        if (percentGain >= 3) {
+        if (percentGain >= 4) {
           await createOrder({
             symbol: stock.symbol,
             qty: stock.qty,
