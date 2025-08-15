@@ -131,6 +131,20 @@ app.get("/runStrat", async (req, res) => {
   }
 });
 
+app.get("/sell", async (req, res) => {
+  try {
+    const aSellOrders = await runSellStocks();
+
+    let response = {
+      sellOrders: aSellOrders,
+    };
+
+    res.send(response);
+  } catch (error) {
+    res.send("Could not run strategy : " + error);
+  }
+});
+
 app.post("/buy", async (req, res) => {
   const { symbol, qty } = req.body;
 

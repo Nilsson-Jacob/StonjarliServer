@@ -50,6 +50,8 @@ async function getBuyDate() {
 }
 
 async function runSellStocks() {
+  let aSold = [];
+
   try {
     const aClosedOrders = await getBuyDate();
     const response = await alpaca.get("/v2/positions");
@@ -87,6 +89,7 @@ async function runSellStocks() {
           });
 
           console.log(`Emergency sell ${stock.symbol} (held > 60 days)`);
+          aSold.push(`Emergency sell ${stock.symbol} (held > 60 days)`);
         } else if (sellDate < todaysDate) {
           // Sell if profit by 5%
           const buyPrice = parseFloat(oMatch.filled_avg_price);
@@ -104,6 +107,9 @@ async function runSellStocks() {
             });
 
             console.log(`Selling ${stock.symbol} for profit`);
+            aSold.push(
+              `Selling ${stock.symbol} for profit. Gain: ${percentGain}%`
+            );
           } else {
             console.log(`Holding ${stock.symbol} - not profitable yet`);
           }
@@ -113,6 +119,8 @@ async function runSellStocks() {
         }
       }
     });
+
+    return aSold;
   } catch (error) {
     return "there was error during sell";
   }
