@@ -55,77 +55,74 @@ async function runSellStocks() {
   try {
     const aClosedOrders = await getBuyDate();
     const response = await alpaca.get("/v2/positions");
-
     const aPositions = response.data;
 
     if (aClosedOrders) {
       symbolMap = new Map(aClosedOrders.map((item) => [item.symbol, item]));
     }
 
-    let buyDate;
     const todaysDate = new Date();
 
-    const promises = aPositions.forEach(async (stock) => {
+    // ✅ Use map instead of forEach
+    const promises = aPositions.map(async (stock) => {
       const oMatch = symbolMap.get(stock.symbol);
-      if (oMatch) {
-        buyDate = oMatch.filled_at.substring(0, 10);
+      if (!oMatch) return;
 
-        // Create sellDate = buyDate + 5 days
-        const sellDate = new Date(buyDate);
-        sellDate.setDate(sellDate.getDate() + 5);
+      const buyDate = oMatch.filled_at.substring(0, 10);
 
-        // Create sellDate = buyDate + 5 days
-        const getMeOutDate = new Date(buyDate);
-        getMeOutDate.setDate(sellDate.getDate() + 60);
+      const sellDate = new Date(buyDate);
+      sellDate.setDate(sellDate.getDate() + 5);
 
-        if (getMeOutDate < todaysDate) {
-          // Sell ASAP
+      const getMeOutDate = new Date(buyDate);
+      getMeOutDate.setDate(getMeOutDate.getDate() + 60);
+
+      if (getMeOutDate < todaysDate) {
+        // Emergency sell
+        await createOrder({
+          symbol: stock.symbol,
+          qty: stock.qty,
+          side: "sell",
+          type: "market",
+          time_in_force: "gtc",
+        });
+
+        console.log(`Emergency sell ${stock.symbol} (held > 60 days)`);
+        aVerdict.push(`Emergency sell ${stock.symbol} (held > 60 days)`);
+      } else if (sellDate < todaysDate) {
+        // Sell if profit
+        const buyPrice = parseFloat(oMatch.filled_avg_price);
+        const currentPrice = parseFloat(stock.current_price);
+        const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
+
+        if (percentGain >= 3) {
           await createOrder({
             symbol: stock.symbol,
             qty: stock.qty,
             side: "sell",
-            type: "market",
+            type: "trailing_stop",
+            trail_percent: 2,
             time_in_force: "gtc",
           });
 
-          console.log(`Emergency sell ${stock.symbol} (held > 60 days)`);
-          aVerdict.push(`Emergency sell ${stock.symbol} (held > 60 days)`);
-        } else if (sellDate < todaysDate) {
-          // Sell if profit by 5%
-          const buyPrice = parseFloat(oMatch.filled_avg_price);
-          const currentPrice = parseFloat(stock.current_price);
-
-          const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
-
-          if (percentGain >= 3) {
-            // ✅ Use trailing stop instead of immediate market sell
-            await createOrder({
-              symbol: stock.symbol,
-              qty: stock.qty,
-              side: "sell",
-              type: "trailing_stop",
-              trail_percent: 2, // you can also try 1, 3, or 5
-              time_in_force: "gtc",
-            });
-
-            console.log(`Selling ${stock.symbol} for profit`);
-            aVerdict.push(
-              `Set trailing stop for ${stock.symbol} for profit. Gain: ${percentGain}%`
-            );
-          } else {
-            aVerdict.push(`Holding ${stock.symbol} - not profitable yet`);
-          }
+          console.log(`Set trailing stop for ${stock.symbol}`);
+          aVerdict.push(
+            `Trailing stop set for ${
+              stock.symbol
+            } - gain: ${percentGain.toFixed(2)}%`
+          );
         } else {
-          // date limit do not sell?'
-          aVerdict.push(`Hold ${stock.symbol} - still within holding period`);
+          aVerdict.push(`Holding ${stock.symbol} - not profitable yet`);
         }
+      } else {
+        aVerdict.push(`Hold ${stock.symbol} - still within holding period`);
       }
     });
 
-    await Promise.all(promises);
+    await Promise.all(promises); // ✅ Now this works correctly
 
     return aVerdict;
   } catch (error) {
+    console.error("Sell strategy failed:", error);
     return "there was error during sell";
   }
 }
