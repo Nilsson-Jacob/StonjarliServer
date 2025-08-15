@@ -9,7 +9,6 @@ const PORT = process.env.PORT || 4000;
 
 const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
-const sellStock = require("");
 const runSellStocks = require("./scripts/runSellStocks.js");
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
