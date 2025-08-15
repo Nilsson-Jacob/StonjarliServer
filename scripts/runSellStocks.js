@@ -50,7 +50,7 @@ async function getBuyDate() {
 }
 
 async function runSellStocks() {
-  let aSold = [];
+  let aVerdict = [];
 
   try {
     const aClosedOrders = await getBuyDate();
@@ -89,7 +89,7 @@ async function runSellStocks() {
           });
 
           console.log(`Emergency sell ${stock.symbol} (held > 60 days)`);
-          aSold.push(`Emergency sell ${stock.symbol} (held > 60 days)`);
+          aVerdict.push(`Emergency sell ${stock.symbol} (held > 60 days)`);
         } else if (sellDate < todaysDate) {
           // Sell if profit by 5%
           const buyPrice = parseFloat(oMatch.filled_avg_price);
@@ -107,20 +107,20 @@ async function runSellStocks() {
             });
 
             console.log(`Selling ${stock.symbol} for profit`);
-            aSold.push(
+            aVerdict.push(
               `Selling ${stock.symbol} for profit. Gain: ${percentGain}%`
             );
           } else {
-            console.log(`Holding ${stock.symbol} - not profitable yet`);
+            aVerdict.push(`Holding ${stock.symbol} - not profitable yet`);
           }
         } else {
           // date limit do not sell?'
-          console.log(`Hold ${stock.symbol} - still within holding period`);
+          aVerdict.push(`Hold ${stock.symbol} - still within holding period`);
         }
       }
     });
 
-    return aSold;
+    return aVerdict;
   } catch (error) {
     return "there was error during sell";
   }
