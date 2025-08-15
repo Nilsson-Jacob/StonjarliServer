@@ -9,6 +9,32 @@ const alpaca = axios.create({
   },
 });
 
+const createOrder = async ({
+  symbol,
+  qty,
+  side = "sell",
+  type = "market",
+  time_in_force = "gtc",
+}) => {
+  try {
+    const response = await alpaca.post("/v2/orders", {
+      symbol,
+      qty,
+      side,
+      type,
+      time_in_force,
+    });
+
+    console.log(`✅ Order placed: ${side.toUpperCase()} ${qty} ${symbol}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "❌ Failed to place order:",
+      error?.response?.data || error.message
+    );
+  }
+};
+
 // Utility: Get latest buy order fill date for a symbol
 async function getBuyDate() {
   const BASE_URL = process.env.ALPACA_BASE_URL;
@@ -52,7 +78,7 @@ async function runSellStocks() {
 
         if (getMeOutDate < todaysDate) {
           // Sell ASAP
-          await alpaca.createOrder({
+          await createOrder({
             symbol: stock.symbol,
             qty: stock.qty,
             side: "sell",
@@ -69,7 +95,7 @@ async function runSellStocks() {
           const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
 
           if (percentGain >= 5) {
-            await alpaca.createOrder({
+            await createOrder({
               symbol: stock.symbol,
               qty: stock.qty,
               side: "sell",
