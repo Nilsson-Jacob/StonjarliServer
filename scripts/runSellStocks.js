@@ -97,18 +97,20 @@ async function runSellStocks() {
 
           const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
 
-          if (percentGain >= 5) {
+          if (percentGain >= 3) {
+            // ✅ Use trailing stop instead of immediate market sell
             await createOrder({
               symbol: stock.symbol,
               qty: stock.qty,
               side: "sell",
-              type: "market",
+              type: "trailing_stop",
+              trail_percent: 2, // you can also try 1, 3, or 5
               time_in_force: "gtc",
             });
 
             console.log(`Selling ${stock.symbol} for profit`);
             aVerdict.push(
-              `Selling ${stock.symbol} for profit. Gain: ${percentGain}%`
+              `Set trailing stop for ${stock.symbol} for profit. Gain: ${percentGain}%`
             );
           } else {
             aVerdict.push(`Holding ${stock.symbol} - not profitable yet`);
