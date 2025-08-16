@@ -69,14 +69,14 @@ async function runPEADStrategy() {
     }
   }
 
+  let errorArray = [];
+
   const topPick = qualified
     .sort((a, b) => b.comparisonEPS - a.comparisonEPS)
     .slice(0, 5);
   const filteredPick = await regimeFilter(topPick);
 
   for (const stock of filteredPick) {
-    console.log("Buying:", stock.symbol);
-
     try {
       await axios.post(
         `${ALPACA_URL}/v2/orders`,
@@ -91,9 +91,15 @@ async function runPEADStrategy() {
       );
     } catch (e) {
       console.error("❌ Failed to buy", stock.symbol, e.message);
+      errorArray.push("❌ Failed to buy", stock.symbol, e.message);
     }
   }
-  return "Sent orders for: " + filteredPick.map((e) => e.symbol);
+  return (
+    "Sent orders for: " +
+    filteredPick.map((e) => e.symbol) +
+    "Errors: " +
+    errorArray
+  );
   //return "Sent orders for: " + filteredPick.map((e) => e.symbol);
 }
 

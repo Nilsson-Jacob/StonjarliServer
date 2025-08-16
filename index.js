@@ -13,6 +13,8 @@ const runSellStocks = require("./scripts/runSellStocks.js");
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
+let todays = [];
+
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
 
@@ -43,6 +45,19 @@ app.get("/account", async (req, res) => {
   } catch (error) {
     console.error("Alpaca API error:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch Alpaca account info" });
+  }
+});
+
+app.get("todays/:date", async (req, res) => {
+  try {
+    const { date } = req.params; // Get the date from the URL, e.g., '2025-08-16'
+    if (todays[date]) {
+      res.send(todays[date]);
+    }
+    res.send("Not today");
+  } catch (error) {
+    console.error("Alpaca API error:", error.response?.data || error.message);
+    res.send(error);
   }
 });
 
@@ -130,6 +145,13 @@ app.get("/runStrat", async (req, res) => {
       hss: aHSS,
       sellOrders: aSellOrders,
     };
+
+    const todaysDate = new Date();
+    const dateKey = todaysDate.toISOString().substring(0, 10);
+
+    // push an object with the date as the key
+    todays.push({ [dateKey]: response });
+
     res.send(response);
   } catch (error) {
     console.error("Error running strategy", error);
