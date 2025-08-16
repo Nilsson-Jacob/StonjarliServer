@@ -48,7 +48,7 @@ app.get("/account", async (req, res) => {
   }
 });
 
-app.get("todays/:date", async (req, res) => {
+app.get("/todays/:date", async (req, res) => {
   try {
     const { date } = req.params; // Get the date from the URL, e.g., '2025-08-16'
     if (todays[date]) {
