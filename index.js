@@ -50,11 +50,18 @@ app.get("/account", async (req, res) => {
 
 app.get("/todays/:date", async (req, res) => {
   try {
+    //const today = new Date().toISOString().substring(0, 10); // e.g. "2025-08-17"
     const { date } = req.params; // Get the date from the URL, e.g., '2025-08-16'
-    if (todays[date]) {
-      res.send(todays[date]);
-    }
-    res.send("Not today");
+
+    // Build start & end times for today in ISO8601
+    const after = `${date}T00:00:00Z`;
+    const until = `${date}T23:59:59Z`;
+
+    const response = await alpaca.get(
+      `${BASE_URL}/v2/orders?status=closed&after=${after}&until=${until}`
+    );
+
+    res.send(response.data);
   } catch (error) {
     console.error("Alpaca API error:", error.response?.data || error.message);
     res.send(error);
@@ -92,7 +99,6 @@ async function getBuyDate() {
 
   try {
     const response = await alpaca.get(`${BASE_URL}/v2/orders?status=closed`);
-
     return response.data;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
