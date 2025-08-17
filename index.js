@@ -7,6 +7,8 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+const yahooFinance = require("yahoo-finance");
+
 const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
 const runSellStocks = require("./scripts/runSellStocks.js");
@@ -65,6 +67,36 @@ app.get("/todays/:date", async (req, res) => {
   } catch (error) {
     console.error("Alpaca API error:", error.response?.data || error.message);
     res.send(error);
+  }
+});
+
+app.get("/SP500/:date", async (req, res) => {
+  const { endDate } = req.params; // Get the date from the URL, e.g., '2025-08-16'
+  const today = new Date();
+  const startDate = today.toISOString.substring(0, 10);
+
+  try {
+    const data = await yahooFinance.historical({
+      symbol: "^GSPC", // S&P 500 index
+      from: startDate,
+      to: endDate,
+      period: "d", // daily data
+    });
+
+    if (data.length < 2) {
+      console.log("Not enough data for the selected dates.");
+      return;
+    }
+
+    const startPrice = data[0].close;
+    const endPrice = data[data.length - 1].close;
+    const growth = ((endPrice - startPrice) / startPrice) * 100;
+
+    res.send(
+      `S&P 500 growth from ${startDate} to ${endDate}: ${growth.toFixed(2)}%`
+    );
+  } catch (error) {
+    res.send("Error fetching data:", error.message);
   }
 });
 
