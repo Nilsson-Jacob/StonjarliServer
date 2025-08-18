@@ -7,7 +7,7 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-import yahooFinance from "yahoo-finance2"; // if using ES modules
+const yahooFinance = require("yahoo-finance2"); // if using ES modules
 
 const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
