@@ -94,7 +94,7 @@ app.get("/SP500/:startDate", async (req, res) => {
       `S&P 500 growth from ${startDate} to ${endDate}: ${growth.toFixed(2)}%`
     );
   } catch (error) {
-    res.send("Error fetching data JNCATCH:");
+    res.send("Error fetching data JNCATCH:" + error);
   }
 });
 
