@@ -7,7 +7,7 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const yahooFinance = require("yahoo-finance2"); // if using ES modules
+const yahooFinance = require("yahoo-finance2").default;
 
 const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
@@ -71,30 +71,42 @@ app.get("/todays/:date", async (req, res) => {
 });
 
 app.get("/SP500/:startDate", async (req, res) => {
-  const { startDate } = req.params; // Get the date from the URL, e.g., '2025-08-16'
-  const today = new Date();
-  const endDate = today.toISOString().substring(0, 10);
-
   try {
-    const data = await yahooFinance.historical("^GSPC", {
+    const { startDate } = req.params;
+    const endDate = new Date().toISOString().substring(0, 10); // today
+
+    const queryOptions = {
       period1: startDate,
       period2: endDate,
       interval: "1d",
-    });
+    };
 
-    if (data.length < 2) {
-      res.send("Error fetching data:");
+    // 🔑 yahoo-finance2 syntax:
+    const data = await yahooFinance.historical("^GSPC", queryOptions);
+
+    if (!Array.isArray(data) || data.length < 2) {
+      return res.status(404).json({
+        error: "Not enough data",
+        startDate,
+        endDate,
+        count: data?.length || 0,
+      });
     }
 
     const startPrice = data[0].close;
     const endPrice = data[data.length - 1].close;
-    const growth = ((endPrice - startPrice) / startPrice) * 100;
+    const growthPct = ((endPrice - startPrice) / startPrice) * 100;
 
-    res.send(
-      `S&P 500 growth from ${startDate} to ${endDate}: ${growth.toFixed(2)}%`
-    );
+    return res.json({
+      startDate,
+      endDate,
+      startPrice,
+      endPrice,
+      growthPct: Number(growthPct.toFixed(2)),
+    });
   } catch (error) {
-    res.send("Error fetching data JNCATCH:" + error);
+    console.error("SP500 route error:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
 
