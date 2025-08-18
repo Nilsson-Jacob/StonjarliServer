@@ -84,8 +84,7 @@ app.get("/SP500/:date", async (req, res) => {
     });
 
     if (data.length < 2) {
-      console.log("Not enough data for the selected dates.");
-      return;
+      res.send("Error fetching data:", error.message);
     }
 
     const startPrice = data[0].close;
