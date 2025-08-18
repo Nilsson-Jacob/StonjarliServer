@@ -70,10 +70,10 @@ app.get("/todays/:date", async (req, res) => {
   }
 });
 
-app.get("/SP500/:date", async (req, res) => {
-  const { endDate } = req.params; // Get the date from the URL, e.g., '2025-08-16'
+app.get("/SP500/:startDate", async (req, res) => {
+  const { startDate } = req.params; // Get the date from the URL, e.g., '2025-08-16'
   const today = new Date();
-  const startDate = today.toISOString.substring(0, 10);
+  const endDate = today.toISOString().substring(0, 10);
 
   try {
     const data = await yahooFinance.historical("^GSPC", {
@@ -83,7 +83,7 @@ app.get("/SP500/:date", async (req, res) => {
     });
 
     if (data.length < 2) {
-      res.send("Error fetching data:", error.message);
+      res.send("Error fetching data:");
     }
 
     const startPrice = data[0].close;
@@ -94,7 +94,7 @@ app.get("/SP500/:date", async (req, res) => {
       `S&P 500 growth from ${startDate} to ${endDate}: ${growth.toFixed(2)}%`
     );
   } catch (error) {
-    res.send("Error fetching data:", error.message);
+    res.send("Error fetching data JNCATCH:");
   }
 });
 
