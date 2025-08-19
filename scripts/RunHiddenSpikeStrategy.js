@@ -76,7 +76,7 @@ async function runHiddenSpikeStrategy() {
 
       const current = q.c,
         previous = q.pc;
-      if (!current || !previous) continue;
+      if (!current || !previous || current > 60) continue;
 
       const pct = ((current - previous) / previous) * 100;
       if (pct < 10) continue; // require >10% up
