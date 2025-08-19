@@ -55,7 +55,7 @@ async function runPEADStrategy() {
       const current = quoteRes.data.c;
       const previousClose = quoteRes.data.pc;
 
-      if (current > previousClose && current > 5) {
+      if (current > previousClose && current > 5 && current < 50) {
         qualified.push({
           ...entry,
           price: current,
