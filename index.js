@@ -85,12 +85,14 @@ app.get("/SP500/:startDate", async (req, res) => {
     const data = await yahooFinance.historical("^GSPC", queryOptions);
 
     if (!Array.isArray(data) || data.length < 2) {
-      return res.status(404).json({
+      /*return res.status(404).json({
         error: "Not enough data",
         startDate,
         endDate,
         count: data?.length || 0,
-      });
+      });*/
+
+      res.send(data);
     }
 
     const startPrice = data[0].close;
