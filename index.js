@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
 app.get("/account", async (req, res) => {
   try {
     console.log("Delaying 30 seconds before running strat...");
-    await new Promise((resolve) => setTimeout(resolve, 21000)); // wait 30s
+    await new Promise((resolve) => setTimeout(resolve, 31000)); // wait 30s
 
     const response = await alpaca.get("/v2/account");
     res.json(response.data);
