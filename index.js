@@ -66,7 +66,7 @@ app.get("/todays/:date", async (req, res) => {
       `${BASE_URL}/v2/orders?status=closed&after=${after}&until=${until}`
     );
 
-    res.send(response.data);
+    res.send(response);
   } catch (error) {
     console.error("Alpaca API error:", error.response?.data || error.message);
     res.send(error);
@@ -152,6 +152,8 @@ async function getBuyDate() {
     throw err;
   }
 }
+
+app.get("/daily", async (req, res) => {});
 
 // Express route
 app.get("/buydate", async (req, res) => {
