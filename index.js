@@ -66,10 +66,10 @@ app.get("/todays/:date", async (req, res) => {
       `${BASE_URL}/v2/orders?status=closed&after=${after}&until=${until}`
     );
 
-    res.send(response);
+    res.send("Response.data is this: " + response.data + " Date is: " + date);
   } catch (error) {
     console.error("Alpaca API error:", error.response?.data || error.message);
-    res.send(error);
+    res.send("Some error");
   }
 });
 
