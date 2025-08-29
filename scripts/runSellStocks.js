@@ -76,6 +76,10 @@ async function runSellStocks() {
       const getMeOutDate = new Date(buyDate);
       getMeOutDate.setDate(getMeOutDate.getDate() + 60);
 
+      const buyPrice = parseFloat(oMatch.filled_avg_price);
+      const currentPrice = parseFloat(stock.current_price);
+      const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
+
       if (getMeOutDate < todaysDate) {
         // Emergency sell
         await createOrder({
@@ -86,13 +90,18 @@ async function runSellStocks() {
           time_in_force: "gtc",
         });
 
-        console.log(`Emergency sell ${stock.symbol} (held > 60 days)`);
-        aVerdict.push(`Emergency sell ${stock.symbol} (held > 60 days)`);
+        console.log(
+          `Emergency sell ${
+            stock.symbol
+          } (held > 60 days) - gain??: ${percentGain.toFixed(2)}%`
+        );
+        aVerdict.push(
+          `Emergency sell ${
+            stock.symbol
+          } (held > 60 days) - gain??: ${percentGain.toFixed(2)}%`
+        );
       } else if (sellDate < todaysDate) {
         // Sell if profit
-        const buyPrice = parseFloat(oMatch.filled_avg_price);
-        const currentPrice = parseFloat(stock.current_price);
-        const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
 
         if (percentGain >= 4) {
           await createOrder({
@@ -111,10 +120,18 @@ async function runSellStocks() {
             } - gain: ${percentGain.toFixed(2)}%`
           );
         } else {
-          aVerdict.push(`Holding ${stock.symbol} - not profitable yet`);
+          aVerdict.push(
+            `Holding ${
+              stock.symbol
+            } - not enough profitable yet - gain?: ${percentGain.toFixed(2)}%`
+          );
         }
       } else {
-        aVerdict.push(`Hold ${stock.symbol} - still within holding period`);
+        aVerdict.push(
+          `Hold ${
+            stock.symbol
+          } - still within holding period - gain:) ${percentGain.toFixed(2)}%`
+        );
       }
     });
 
