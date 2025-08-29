@@ -109,7 +109,7 @@ async function runSellStocks() {
             qty: stock.qty,
             side: "sell",
             type: "trailing_stop",
-            trail_percent: 2,
+            trail_percent: 1,
             time_in_force: "gtc",
           });
 
