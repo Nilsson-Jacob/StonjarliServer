@@ -15,6 +15,7 @@ const createOrder = async ({
   side = "sell",
   type = "market",
   time_in_force = "gtc",
+  trail_percent = "1",
 }) => {
   try {
     const response = await alpaca.post("/v2/orders", {
@@ -109,7 +110,7 @@ async function runSellStocks() {
         if (percentGain >= 4) {
           await createOrder({
             symbol: stock.symbol,
-            qty: stock.qty,
+            qty: 1,
             side: "sell",
             type: "trailing_stop",
             trail_percent: 1,
