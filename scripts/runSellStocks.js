@@ -23,6 +23,7 @@ const createOrder = async ({
       side,
       type,
       time_in_force,
+      trail_percent,
     });
 
     console.log(`✅ Order placed: ${side.toUpperCase()} ${qty} ${symbol}`);
@@ -79,6 +80,8 @@ async function runSellStocks() {
       const buyPrice = parseFloat(oMatch.filled_avg_price);
       const currentPrice = parseFloat(stock.current_price);
       const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
+
+      console.log("type of qty: " + typeof stock.qty);
 
       if (getMeOutDate < todaysDate) {
         // Emergency sell
