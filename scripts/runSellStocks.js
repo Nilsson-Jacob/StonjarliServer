@@ -42,7 +42,8 @@ async function getBuyDate() {
   const BASE_URL = process.env.ALPACA_BASE_URL;
 
   try {
-    const response = await alpaca.get(`${BASE_URL}/v2/orders?status=closed`);
+    //const response = await alpaca.get(`${BASE_URL}/v2/orders?status=closed`);
+    const response = await alpaca.get("/v2/orders?status=closed");
 
     return response.data;
   } catch (err) {
@@ -70,7 +71,12 @@ async function runSellStocks() {
       const oMatch = symbolMap.get(stock.symbol);
       if (!oMatch) return;
 
-      const buyDate = oMatch.filled_at.substring(0, 10);
+      let buyDate = "";
+      if (!oMatch.filled_at) {
+        return;
+      }
+
+      buyDate = new Date(oMatch.filled_at);
 
       const sellDate = new Date(buyDate);
       sellDate.setDate(sellDate.getDate() + 5);
@@ -88,7 +94,7 @@ async function runSellStocks() {
         // Emergency sell
         await createOrder({
           symbol: stock.symbol,
-          qty: stock.qty,
+          qty: Number(stock.qty),
           side: "sell",
           type: "market",
           time_in_force: "gtc",
@@ -110,10 +116,10 @@ async function runSellStocks() {
         if (percentGain >= 4) {
           await createOrder({
             symbol: stock.symbol,
-            qty: 1,
+            qty: Number(stock.qty),
             side: "sell",
             type: "trailing_stop",
-            trail_percent: 1,
+            trail_percent: 2,
             time_in_force: "gtc",
           });
 
