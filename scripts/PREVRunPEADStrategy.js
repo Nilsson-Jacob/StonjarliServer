@@ -1,0 +1,204 @@
+const axios = require("axios");
+
+const regimeFilter = require("../filters/RegimeFilter");
+
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
+const ALPACA_KEY = process.env.ALPACA_API_KEY;
+const ALPACA_SECRET = process.env.ALPACA_API_SECRET;
+
+const BASE_URL = "https://finnhub.io/api/v1";
+const ALPACA_URL = "https://paper-api.alpaca.markets";
+
+const headers = {
+  "APCA-API-KEY-ID": ALPACA_KEY,
+  "APCA-API-SECRET-KEY": ALPACA_SECRET,
+};
+
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+async function runPEADStrategy() {
+  const today = new Date();
+  const earningsDate = new Date(today);
+
+  // Adjust based on day of week
+  // getDay(): Sunday = 0, Monday = 1, ..., Saturday = 6
+  const weekday = today.getDay();
+  if (weekday === 1) {
+    // Monday → last Thursday
+    earningsDate.setDate(today.getDate() - 3);
+  } else if (weekday === 2) {
+    // Tuesday → last Friday
+    earningsDate.setDate(today.getDate() - 4);
+  } else {
+    // Default: just go back 2 days
+    earningsDate.setDate(today.getDate() - 2);
+  }
+
+  const earningsDateStr = earningsDate.toISOString().split("T")[0];
+  console.log("Running PEAD for earnings from", earningsDateStr);
+
+  const earningsRes = await axios.get(`${BASE_URL}/calendar/earnings`, {
+    params: {
+      from: earningsDateStr,
+      to: earningsDateStr,
+      token: FINNHUB_API_KEY,
+    },
+  });
+
+  const raw = earningsRes.data.earningsCalendar || [];
+  const filtered = raw.filter((e) => {
+    const { epsActual, epsEstimate } = e;
+    if (!epsActual || !epsEstimate || epsActual <= 0 || epsEstimate <= 0) {
+      return false;
+    }
+    const surprise = epsActual / epsEstimate;
+    return surprise > 1.1;
+  });
+
+  const qualified = [];
+  for (const entry of filtered) {
+    try {
+      const quoteRes = await axios.get(`${BASE_URL}/quote`, {
+        params: { symbol: entry.symbol, token: FINNHUB_API_KEY },
+      });
+
+      const current = quoteRes.data.c;
+      const previousClose = quoteRes.data.pc;
+
+      if (current > previousClose && current > 5 && current < 40) {
+        qualified.push({
+          ...entry,
+          price: current,
+          comparisonEPS: entry.epsActual / entry.epsEstimate,
+        });
+      }
+
+      await delay(1200); // prevent rate limit
+    } catch (e) {
+      console.warn("Quote fetch failed for", entry.symbol, e.message);
+    }
+  }
+
+  let errorArray = [];
+  const topPick = qualified
+    .sort((a, b) => b.comparisonEPS - a.comparisonEPS)
+    .slice(0, 5);
+
+  const filteredPick = await regimeFilter(topPick);
+
+  for (const stock of filteredPick) {
+    try {
+      await axios.post(
+        `${ALPACA_URL}/v2/orders`,
+        {
+          symbol: stock.symbol,
+          qty: 1,
+          side: "buy",
+          type: "market",
+          time_in_force: "gtc",
+        },
+        { headers }
+      );
+    } catch (e) {
+      console.error("❌ Failed to buy", stock.symbol, e.message);
+      errorArray.push(`❌ Failed to buy ${stock.symbol}: ${e.message}`);
+    }
+  }
+
+  return (
+    "Sent orders for: " +
+    filteredPick.map((e) => e.symbol).join(", ") +
+    " | Errors: " +
+    errorArray.join("; ")
+  );
+}
+
+/*
+async function runPEADStrategy() {
+  const today = new Date();
+  const earningsDate = new Date(today);
+  earningsDate.setDate(today.getDate() - 2);
+
+  const earningsDateStr = earningsDate.toISOString().split("T")[0];
+
+  console.log("Running PEAD for earnings from", earningsDateStr);
+
+  const earningsRes = await axios.get(`${BASE_URL}/calendar/earnings`, {
+    params: {
+      from: earningsDateStr,
+      to: earningsDateStr,
+      token: FINNHUB_API_KEY,
+    },
+  });
+
+  const raw = earningsRes.data.earningsCalendar || [];
+
+  const filtered = raw.filter((e) => {
+    const { epsActual, epsEstimate } = e;
+    if (!epsActual || !epsEstimate || epsActual <= 0 || epsEstimate <= 0) {
+      return false;
+    }
+    const surprise = epsActual / epsEstimate;
+    return surprise > 1.1;
+  });
+
+  const qualified = [];
+
+  for (const entry of filtered) {
+    try {
+      const quoteRes = await axios.get(`${BASE_URL}/quote`, {
+        params: { symbol: entry.symbol, token: FINNHUB_API_KEY },
+      });
+
+      const current = quoteRes.data.c;
+      const previousClose = quoteRes.data.pc;
+
+      if (current > previousClose && current > 5 && current < 40) {
+        qualified.push({
+          ...entry,
+          price: current,
+          comparisonEPS: entry.epsActual / entry.epsEstimate,
+        });
+      }
+
+      await delay(1200); // prevent rate limit
+    } catch (e) {
+      console.warn("Quote fetch failed for", entry.symbol, e.message);
+    }
+  }
+
+  let errorArray = [];
+
+  const topPick = qualified
+    .sort((a, b) => b.comparisonEPS - a.comparisonEPS)
+    .slice(0, 5);
+  const filteredPick = await regimeFilter(topPick);
+
+  for (const stock of filteredPick) {
+    try {
+      await axios.post(
+        `${ALPACA_URL}/v2/orders`,
+        {
+          symbol: stock.symbol,
+          qty: 1,
+          side: "buy",
+          type: "market",
+          time_in_force: "gtc",
+        },
+        { headers }
+      );
+    } catch (e) {
+      console.error("❌ Failed to buy", stock.symbol, e.message);
+      errorArray.push("❌ Failed to buy", stock.symbol, e.message);
+    }
+  }
+  return (
+    "Sent orders for: " +
+    filteredPick.map((e) => e.symbol) +
+    "Errors: " +
+    errorArray
+  );
+  //return "Sent orders for: " + filteredPick.map((e) => e.symbol);
+}*/
+
+module.exports = runPEADStrategy;
