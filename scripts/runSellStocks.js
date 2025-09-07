@@ -43,9 +43,12 @@ async function getBuyDate() {
 
   try {
     //const response = await alpaca.get(`${BASE_URL}/v2/orders?status=closed`);
-    const response = await alpaca.get("/v2/orders?status=closed");
+    const response = await alpaca.get("/v2/orders?status=filled");
+    const aClosedOrders = response.data.filter(
+      (order) => order.side === "buy" && order.filled_at
+    );
 
-    return response.data;
+    return aClosedOrders;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
