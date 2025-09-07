@@ -88,7 +88,7 @@ async function runSellStocks() {
       const currentPrice = parseFloat(stock.current_price);
       const percentGain = ((currentPrice - buyPrice) / buyPrice) * 100;
 
-      console.log("type of qty: " + typeof stock.qty);
+      console.log("symbol going through the map: " + stock.symbol);
 
       if (getMeOutDate < todaysDate) {
         // Emergency sell
@@ -112,6 +112,7 @@ async function runSellStocks() {
         );
       } else if (sellDate < todaysDate) {
         // Sell if profit
+        console.log("selldate < todaysDate: " + stock.symbol);
 
         if (percentGain >= 4) {
           await createOrder({
