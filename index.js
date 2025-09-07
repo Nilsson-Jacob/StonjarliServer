@@ -9,13 +9,14 @@ const PORT = process.env.PORT || 4000;
 
 const yahooFinance = require("yahoo-finance2").default;
 
-const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
-const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy");
+const runPEADStrategy = require("./scripts/PREVRunPEADStrategy.js");
+const runHiddenSpikeStrategy = require("./scripts/PREVRunHiddenSpikeStrategy.js");
 const runSellStocks = require("./scripts/runSellStocks.js");
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 let todays = [];
+let information = {};
 
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
@@ -153,7 +154,9 @@ async function getBuyDate() {
   }
 }
 
-app.get("/daily", async (req, res) => {});
+app.get("/daily", async (req, res) => {
+  return todays;
+});
 
 // Express route
 app.get("/buydate", async (req, res) => {
@@ -205,8 +208,7 @@ app.get("/runStrat", async (req, res) => {
     const dateKey = todaysDate.toISOString().substring(0, 10);
 
     // push an object with the date as the key
-    todays.push({ [dateKey]: response });
-
+    todays = response;
     res.send(response);
   } catch (error) {
     console.error("Error running strategy", error);
