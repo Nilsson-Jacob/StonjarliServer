@@ -7,7 +7,7 @@ const ALPACA_KEY = process.env.ALPACA_API_KEY;
 const ALPACA_SECRET = process.env.ALPACA_API_SECRET;
 
 const BASE_URL = "https://finnhub.io/api/v1";
-const ALPACA_URL = "https://paper-api.alpaca.markets";
+const ALPACA_URL = process.env.ALPACA_BASE_URL;
 
 // Headers for Alpaca orders
 const headers = {
