@@ -263,7 +263,7 @@ async function runPEADStrategy() {
     }
 
     // simple  test
-    candidates = { symbol: "AAPL" };
+    candidates.push({ symbol: "AAPL" });
 
     // Step 4: Place buy orders with position sizing
     for (const stock of candidates) {
@@ -273,6 +273,8 @@ async function runPEADStrategy() {
         //await placeBuy(stock.symbol, qty);
 
         // The body you want to send
+        console.log("buying for : " + candidates);
+
         const body = {
           symbol: stock.symbol,
           qty: 1,
