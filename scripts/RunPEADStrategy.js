@@ -178,13 +178,13 @@ async function runPEADStrategy() {
   const placed = [];
 
   //----
-  const body = {
+  /*const body = {
     symbol: "M",
     qty: 1,
   };
 
   await axios.post(url, body);
-  console.log("just bougt?");
+  console.log("just bougt?");*/
   // -----
 
   try {
@@ -272,25 +272,20 @@ async function runPEADStrategy() {
       console.warn("⚠️ regimeFilter failed:", e.message);
     }
 
-    // simple  test
-    candidates.push({ symbol: "AAPL" });
-
     // Step 4: Place buy orders with position sizing
     for (const stock of candidates) {
-      //const qty = Number.isFinite(equity) ? computeQty(stock.price, equity) : 1;
+      const qty = Number.isFinite(equity) ? computeQty(stock.price, equity) : 1;
 
       try {
-        //await placeBuy(stock.symbol, qty);
+        await placeBuy(stock.symbol, qty);
 
-        // The body you want to send
-        console.log("buying for : " + candidates);
-
-        const body = {
-          symbol: stock.symbol,
-          qty: 1,
-        };
-
-        await axios.post(url, body);
+        // If above does not work
+        //console.log("buying for : " + candidates);
+        //const body = {
+        //  symbol: stock.symbol,
+        //  qty: 1,
+        //};
+        //await axios.post(url, body);
 
         placed.push(`${stock.symbol} (qty ${qty})`);
         await delay(300); // brief delay between orders
