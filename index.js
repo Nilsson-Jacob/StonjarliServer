@@ -9,8 +9,10 @@ const PORT = process.env.PORT || 4000;
 
 const yahooFinance = require("yahoo-finance2").default;
 
-const runPEADStrategy = require("./scripts/PREVRunPEADStrategy.js");
-const runHiddenSpikeStrategy = require("./scripts/PREVRunHiddenSpikeStrategy.js");
+//const runPEADStrategy = require("./scripts/PREVRunPEADStrategy.js");
+//const runHiddenSpikeStrategy = require("./scripts/PREVRunHiddenSpikeStrategy.js");
+const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
+const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy.js");
 const runSellStocks = require("./scripts/runSellStocks.js");
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -156,6 +158,18 @@ async function getBuyDate() {
 
 app.get("/daily", async (req, res) => {
   return todays;
+});
+
+app.get("/justBuy/:symbol", (async) => {
+  symbol = req.body.symbol;
+
+  return alpaca.post("/v2/orders", {
+    symbol,
+    qty,
+    side: "buy",
+    type: "market",
+    time_in_force: "gtc",
+  });
 });
 
 // Express route
