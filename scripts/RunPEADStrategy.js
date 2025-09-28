@@ -14,7 +14,7 @@ const ALPACA_KEY = process.env.ALPACA_API_KEY;
 const ALPACA_SECRET = process.env.ALPACA_API_SECRET;
 
 const FINNHUB_BASE = "https://finnhub.io/api/v1";
-const ALPACA_BASE = "https://paper-api.alpaca.markets";
+const ALPACA_BASE = process.env.ALPACA_BASE_URL;
 
 // === Configurable parameters ===
 const PRICE_MIN = 5; // Minimum stock price
@@ -40,6 +40,8 @@ const alpaca = axios.create({
   baseURL: ALPACA_BASE,
   headers,
 });
+
+const url = "https://stonjarliserver.onrender.com/buy";
 
 // Helper delay for API rate limits
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -260,11 +262,24 @@ async function runPEADStrategy() {
       console.warn("⚠️ regimeFilter failed:", e.message);
     }
 
+    // simple  test
+    candidates = { symbol: "AAPL" };
+
     // Step 4: Place buy orders with position sizing
     for (const stock of candidates) {
-      const qty = Number.isFinite(equity) ? computeQty(stock.price, equity) : 1;
+      //const qty = Number.isFinite(equity) ? computeQty(stock.price, equity) : 1;
+
       try {
-        await placeBuy(stock.symbol, qty);
+        //await placeBuy(stock.symbol, qty);
+
+        // The body you want to send
+        const body = {
+          symbol: stock.symbol,
+          qty: 1,
+        };
+
+        await axios.post(url, body);
+
         placed.push(`${stock.symbol} (qty ${qty})`);
         await delay(300); // brief delay between orders
       } catch (err) {
