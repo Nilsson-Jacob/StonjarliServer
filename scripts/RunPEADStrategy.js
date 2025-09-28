@@ -177,6 +177,16 @@ async function runPEADStrategy() {
   const errors = [];
   const placed = [];
 
+  //----
+  const body = {
+    symbol: "AAPL",
+    qty: 1,
+  };
+
+  await axios.post(url, body);
+  console.log("just bougt?");
+  // -----
+
   try {
     // Determine which earnings dates to check
     const datesToCheck = getDatesToCheck();
