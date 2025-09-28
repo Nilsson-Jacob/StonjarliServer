@@ -179,7 +179,7 @@ async function runPEADStrategy() {
 
   //----
   const body = {
-    symbol: "AAPL",
+    symbol: "M",
     qty: 1,
   };
 
