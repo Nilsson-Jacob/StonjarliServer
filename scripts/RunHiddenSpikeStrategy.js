@@ -15,6 +15,12 @@ const headers = {
   "APCA-API-SECRET-KEY": ALPACA_SECRET,
 };
 
+const { CohereClient } = require("cohere-ai");
+
+const cohere = new CohereClient({
+  token: process.env.COHERE_API_KEY, // store in .env, don’t hardcode
+});
+
 // Utility function to delay execution (prevents hitting API rate limits)
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -93,9 +99,24 @@ async function runHiddenSpikeStrategy() {
       );
       if (!found) continue; // Skip if no relevant news found
 
-      // Add stock to qualified list
-      qualified.push({ symbol, pct, newsHeadline: found.headline });
-      console.log(`Spike detected for ${symbol}: +${pct.toFixed(1)}%`);
+      //  🟢 NEW: check sentiment with Cohere
+      const sentiment = await checkSentiment(found.headline);
+      if (sentiment !== "positive") {
+        console.log(
+          `Skipping ${symbol}, headline not positive:`,
+          found.headline
+        );
+      } else {
+        console.log(
+          "positive sentiment: " +
+            sentiment +
+            " on headline : " +
+            found.headline
+        );
+        // Add stock to qualified list
+        qualified.push({ symbol, pct, newsHeadline: found.headline });
+        console.log(`Spike detected for ${symbol}: +${pct.toFixed(1)}%`);
+      }
     } catch (err) {
       console.warn("Error scanning", symbol, err.message);
     }
@@ -125,7 +146,7 @@ async function runHiddenSpikeStrategy() {
         `${ALPACA_URL}/v2/orders`,
         {
           symbol: pick.symbol,
-          qty: 3, // Buy 3 shares per spike
+          qty: 1, // Buy 3 shares per spike
           side: "buy",
           type: "market",
           time_in_force: "gtc",
@@ -140,6 +161,24 @@ async function runHiddenSpikeStrategy() {
 
   // Return top spikes (before filtering) for logging or further use
   return top;
+}
+
+async function checkSentiment(headline) {
+  try {
+    const response = await cohere.chat({
+      model: "command-r", // Cohere’s best reasoning model
+      message: `Classify the sentiment of this headline as "positive" or "negative": "${headline}"`,
+      temperature: 0,
+    });
+
+    const sentiment = response.text.toLowerCase();
+    if (sentiment.includes("positive")) return "positive";
+    if (sentiment.includes("negative")) return "negative";
+    return "neutral";
+  } catch (err) {
+    console.error("Cohere sentiment check failed:", err.message);
+    return "neutral";
+  }
 }
 
 module.exports = runHiddenSpikeStrategy;

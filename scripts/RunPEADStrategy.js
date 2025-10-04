@@ -274,7 +274,7 @@ async function runPEADStrategy() {
 
     // Step 4: Place buy orders with position sizing
     for (const stock of candidates) {
-      const qty = Number.isFinite(equity) ? computeQty(stock.price, equity) : 1;
+      const qty = 1; //Number.isFinite(equity) ? computeQty(stock.price, equity) : 1;
 
       try {
         await placeBuy(stock.symbol, qty);
