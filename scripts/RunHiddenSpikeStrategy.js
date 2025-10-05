@@ -18,7 +18,8 @@ const headers = {
   "APCA-API-SECRET-KEY": ALPACA_SECRET,
 };
 
-const { CohereClient } = require("cohere-ai");
+//const { CohereClient } = require("cohere-ai");
+import { CohereClient } from "cohere-ai";
 
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY, // store in .env, don’t hardcode
