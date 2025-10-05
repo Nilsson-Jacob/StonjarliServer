@@ -2,7 +2,7 @@
 //const regimeFilter = require("../filters/RegimeFilter");
 
 import axios from "axios";
-import regimeFilter from "../filters/RegimeFilter";
+import regimeFilter from "../filters/RegimeFilter.js";
 
 // API keys
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
