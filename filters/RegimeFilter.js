@@ -1,4 +1,4 @@
-const axios = require("axios");
+import axios from "axios";
 const FRED_API_KEY = process.env.FRED_API_KEY;
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
