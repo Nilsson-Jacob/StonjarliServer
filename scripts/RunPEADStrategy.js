@@ -173,7 +173,7 @@ async function placeBuy(symbol, qty) {
 }
 
 // === Main strategy ===
-async function runPEADStrategy() {
+export default async function runPEADStrategy() {
   const errors = [];
   const placed = [];
 
@@ -308,4 +308,4 @@ async function runPEADStrategy() {
   }
 }
 
-module.exports = runPEADStrategy;
+//module.exports = runPEADStrategy;

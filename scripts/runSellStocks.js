@@ -55,7 +55,7 @@ async function getBuyDate() {
   }
 }
 
-async function runSellStocks() {
+export default async function runSellStocks() {
   let aVerdict = [];
 
   try {
@@ -158,4 +158,4 @@ async function runSellStocks() {
   }
 }
 
-module.exports = runSellStocks;
+//module.exports = runSellStocks;

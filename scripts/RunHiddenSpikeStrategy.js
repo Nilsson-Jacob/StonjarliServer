@@ -63,7 +63,7 @@ const symbols = [
 ];
 
 // Main function to detect and buy hidden spikes
-async function runHiddenSpikeStrategy() {
+export default async function runHiddenSpikeStrategy() {
   console.log("Running hidden spike scan for", symbols);
 
   const qualified = []; // Stores stocks that pass all filters
@@ -194,4 +194,4 @@ async function checkSentiment(headline) {
   }
 }
 
-module.exports = runHiddenSpikeStrategy;
+//module.exports = runHiddenSpikeStrategy;
