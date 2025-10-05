@@ -5,8 +5,10 @@
 // 3) Liquidity & momentum confirmation to avoid illiquid or dead stocks
 // 4) Position sizing based on equity & assumed stop-loss risk
 
-const axios = require("axios");
-const regimeFilter = require("../filters/RegimeFilter");
+//const axios = require("axios");
+//const regimeFilter = require("../filters/RegimeFilter");
+import axios from "axios";
+import regimeFilter from "../filters/RegimeFilter.js";
 
 // API keys and endpoints
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;

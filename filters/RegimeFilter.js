@@ -68,7 +68,7 @@ function classifyGrowthType(stock) {
 }
 
 // --- Main filter function ---
-async function regimeFilter(topPicks) {
+export default async function regimeFilter(topPicks) {
   const regime = await getCurrentRegime();
   console.log("Detected regime:", regime);
 
@@ -102,4 +102,4 @@ async function regimeFilter(topPicks) {
   return filtered;
 }
 
-module.exports = regimeFilter;
+//module.exports = regimeFilter;

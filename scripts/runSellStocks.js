@@ -1,4 +1,5 @@
-const axios = require("axios");
+//const axios = require("axios");
+import axios from "axios";
 const BASE_URL = "https://finnhub.io/api/v1";
 
 const alpaca = axios.create({
