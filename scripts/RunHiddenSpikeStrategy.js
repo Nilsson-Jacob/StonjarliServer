@@ -167,13 +167,14 @@ async function checkSentiment(headline) {
   try {
     const response = await cohere.chat({
       model: "command-r", // Cohere’s best reasoning model
-      message: `Classify the sentiment of this headline as "positive" or "negative": "${headline}"`,
+      message: `Classify the sentiment of this headline as "positive", "negative" or "neutral": "${headline}"`,
       temperature: 0,
     });
 
     const sentiment = response.text.toLowerCase();
     if (sentiment.includes("positive")) return "positive";
     if (sentiment.includes("negative")) return "negative";
+    if (sentiment.includes("neutral")) return "neutral";
     return "neutral";
   } catch (err) {
     console.error("Cohere sentiment check failed:", err.message);

@@ -1,5 +1,7 @@
 const express = require("express");
 require("dotenv").config();
+import pool from "./db/db.js";
+
 const axios = require("axios");
 
 const cors = require("cors");
@@ -23,8 +25,14 @@ let information = {};
 app.use(express.json()); // ✅ This is what parses JSON in requests
 app.use(cors()); // You can pass options to restrict allowed origins
 
-app.get("/test", (req, res) => {
-  res.send("✅ Test route working");
+app.get("/test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM positions");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
 });
 
 app.listen(PORT, () => {
