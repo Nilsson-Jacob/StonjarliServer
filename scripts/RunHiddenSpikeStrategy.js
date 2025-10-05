@@ -24,6 +24,8 @@ const cohere = new CohereClient({
 // Utility function to delay execution (prevents hitting API rate limits)
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
+let headLineAndVerdict = [];
+
 // Symbols to scan for hidden spikes
 const symbols = [
   "TSLA",
@@ -172,9 +174,19 @@ async function checkSentiment(headline) {
     });
 
     const sentiment = response.text.toLowerCase();
-    if (sentiment.includes("positive")) return "positive";
-    if (sentiment.includes("negative")) return "negative";
-    if (sentiment.includes("neutral")) return "neutral";
+    if (sentiment.includes("positive")) {
+      headLineAndVerdict.push({ headline: headline, sentiment: "positive" });
+      return "positive";
+    }
+    if (sentiment.includes("negative")) {
+      headLineAndVerdict.push({ headline: headline, sentiment: "negative" });
+      return "negative";
+    }
+    if (sentiment.includes("neutral")) {
+      headLineAndVerdict.push({ headline: headline, sentiment: "neutral" });
+      return "neutral";
+    }
+
     return "neutral";
   } catch (err) {
     console.error("Cohere sentiment check failed:", err.message);

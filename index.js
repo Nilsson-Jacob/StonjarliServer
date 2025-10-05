@@ -17,9 +17,13 @@ import yahooFinance from "yahoo-finance2";
 //const runPEADStrategy = require("./scripts/PREVRunPEADStrategy.js");
 //const runHiddenSpikeStrategy = require("./scripts/PREVRunHiddenSpikeStrategy.js");
 
-const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
-const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy.js");
-const runSellStocks = require("./scripts/runSellStocks.js");
+//const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
+//const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy.js");
+//const runSellStocks = require("./scripts/runSellStocks.js");
+
+import runPEADStrategy from "./scripts/RunPEADStrategy.js";
+import runHiddenSpikeStrategy from "./scripts/RunHiddenSpikeStrategy.js";
+import runSellStocks from "./scripts/runSellStocks.js";
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
