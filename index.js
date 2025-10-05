@@ -1,5 +1,8 @@
-const express = require("express");
-require("dotenv").config();
+//const express = require("express");
+//require("dotenv").config();
+import express from "express";
+import cors from "cors"; // example of another module
+
 import pool from "./db/db.js";
 
 const axios = require("axios");
