@@ -5,17 +5,18 @@ import cors from "cors"; // example of another module
 
 import pool from "./db/db.js";
 
-const axios = require("axios");
-
+//const axios = require("axios");
+import axios from "axios";
 //const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const yahooFinance = require("yahoo-finance2").default;
-
+//const yahooFinance = require("yahoo-finance2").default;
+import yahooFinance from "yahoo-finance2";
 //const runPEADStrategy = require("./scripts/PREVRunPEADStrategy.js");
 //const runHiddenSpikeStrategy = require("./scripts/PREVRunHiddenSpikeStrategy.js");
+
 const runPEADStrategy = require("./scripts/RunPEADStrategy.js");
 const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy.js");
 const runSellStocks = require("./scripts/runSellStocks.js");
