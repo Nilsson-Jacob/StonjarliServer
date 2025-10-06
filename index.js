@@ -35,8 +35,17 @@ app.use(cors()); // You can pass options to restrict allowed origins
 
 app.get("/test", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM positions");
-    res.json(result.rows);
+    console.log("here in test");
+
+    const query = `CREATE TABLE JNVENT (
+      id SERIAL PRIMARY KEY,
+      sentiment VARCHAR(15) NOT NULL,
+      headline VARCHAR(70) NOT NULL
+    )`;
+
+    const result = await pool.query(query);
+
+    res.json(result);
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");

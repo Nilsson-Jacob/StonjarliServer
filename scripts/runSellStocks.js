@@ -58,6 +58,7 @@ async function getBuyDate() {
 
 export default async function runSellStocks() {
   let aVerdict = [];
+  let symbolMap;
 
   try {
     const aClosedOrders = await getBuyDate();
