@@ -53,7 +53,7 @@ app.get("/test", async (req, res) => {
     res.json(res);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server error: " + err.message);
+    res.status(500).send("Server error: " + err);
   }
 });
 
