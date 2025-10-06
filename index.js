@@ -37,18 +37,23 @@ app.get("/test", async (req, res) => {
   try {
     console.log("here in test");
 
-    const query = `CREATE TABLE JNVENT (
-      id SERIAL PRIMARY KEY,
+    const query = `CREATE TABLE JNVENTWO (
       sentiment VARCHAR(15) NOT NULL,
       headline VARCHAR(70) NOT NULL
     )`;
 
     const result = await pool.query(query);
 
-    res.json(result);
+    const secondQuery = 'INSERT INTO JNVENTWO ("Here", "there")';
+
+    const resultwo = await pool.query(query);
+
+    const res = await pool.query("SELECT * from JNVENTWO");
+
+    res.json(res);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server error");
+    res.status(500).send("Server error: " + err.message);
   }
 });
 
