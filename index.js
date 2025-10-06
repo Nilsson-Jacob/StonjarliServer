@@ -98,6 +98,12 @@ app.get("/db", async (req, res) => {
   res.json(selectResult.rows);
 });
 
+app.get("/sentiments", async (req, res) => {
+  const selectResult = await pool.query("SELECT * FROM sentiments;");
+
+  res.json(selectResult.rows);
+});
+
 app.get("/account", async (req, res) => {
   try {
     console.log("Delaying 30 seconds before running strat...");
