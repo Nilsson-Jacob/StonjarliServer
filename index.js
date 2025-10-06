@@ -43,12 +43,15 @@ app.get("/test", async (req, res) => {
     )`;
 
     const result = await pool.query(query);
+    console.log("result: " + result);
 
     const secondQuery = 'INSERT INTO JNVENTWO ("Here", "there")';
 
     const resultwo = await pool.query(query);
+    console.log("result two: " + resultwo);
 
     const res = await pool.query("SELECT * from JNVENTWO");
+    console.log("res: " + res);
 
     res.json(res);
   } catch (err) {
