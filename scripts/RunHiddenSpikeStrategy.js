@@ -3,6 +3,7 @@
 
 import axios from "axios";
 import regimeFilter from "../filters/RegimeFilter.js";
+import pool from "../db/db.js";
 
 // API keys
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
@@ -162,6 +163,42 @@ export default async function runHiddenSpikeStrategy() {
       console.log("✅ Bought", pick.symbol);
     } catch (err) {
       console.error("❌ Failed to buy spike:", pick.symbol, err.message);
+    }
+  }
+
+  // 🧩 Save all headline-sentiment pairs in a single DB batch
+  if (headLineAndVerdict.length > 0) {
+    try {
+      // Ensure the table exists
+      await pool.query(`
+      CREATE TABLE IF NOT EXISTS sentiments (
+        id SERIAL PRIMARY KEY,
+        headline TEXT NOT NULL,
+        sentiment VARCHAR(15) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+      // Build parameterized multi-row insert
+      const values = headLineAndVerdict
+        .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`)
+        .join(", ");
+
+      const params = headLineAndVerdict.flatMap((r) => [
+        r.headline,
+        r.sentiment,
+      ]);
+
+      await pool.query(
+        `INSERT INTO sentiments (headline, sentiment) VALUES ${values}`,
+        params
+      );
+
+      console.log(
+        `✅ Saved ${headLineAndVerdict.length} sentiment records to database`
+      );
+    } catch (err) {
+      console.error("❌ Failed to save sentiments:", err.message);
     }
   }
 

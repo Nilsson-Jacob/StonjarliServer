@@ -87,6 +87,17 @@ app.get("/", (req, res) => {
   res.send("Hello from backend JN!");
 });
 
+app.get("/db", async (req, res) => {
+  const aHSS = await runHiddenSpikeStrategy();
+  await delay(1200); // prevent rate limit
+
+  const selectResult = await pool.query("SELECT * FROM sentiments;");
+  console.log("All rows:", selectResult.rows);
+
+  // 4️⃣ Send result to client
+  res.json(selectResult.rows);
+});
+
 app.get("/account", async (req, res) => {
   try {
     console.log("Delaying 30 seconds before running strat...");
