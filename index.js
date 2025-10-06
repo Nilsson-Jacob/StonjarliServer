@@ -37,26 +37,37 @@ app.get("/test", async (req, res) => {
   try {
     console.log("here in test");
 
-    const query = `CREATE TABLE JNVENTWO (
-      sentiment VARCHAR(15) NOT NULL,
-      headline VARCHAR(70) NOT NULL
-    )`;
+    // 1️⃣ Create the table (if it doesn't exist)
+    const createQuery = `
+      CREATE TABLE IF NOT EXISTS JNVENTWO (
+        sentiment VARCHAR(15) NOT NULL,
+        headline VARCHAR(70) NOT NULL
+      );
+    `;
+    await pool.query(createQuery);
+    console.log("Table created or already exists.");
 
-    const result = await pool.query(query);
-    console.log("result: " + result);
+    // 2️⃣ Insert a test row
+    const insertQuery = `
+      INSERT INTO JNVENTWO (sentiment, headline)
+      VALUES ($1, $2)
+      RETURNING *;
+    `;
+    const insertResult = await pool.query(insertQuery, [
+      "Positive",
+      "Market is going up",
+    ]);
+    console.log("Inserted row:", insertResult.rows[0]);
 
-    const secondQuery = 'INSERT INTO JNVENTWO ("Here", "there")';
+    // 3️⃣ Select all rows
+    const selectResult = await pool.query("SELECT * FROM JNVENTWO;");
+    console.log("All rows:", selectResult.rows);
 
-    const resultwo = await pool.query(query);
-    console.log("result two: " + resultwo);
-
-    const res = await pool.query("SELECT * from JNVENTWO");
-    console.log("res: " + res);
-
-    res.json(res);
+    // 4️⃣ Send result to client
+    res.json(selectResult.rows);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error: " + err);
+    console.error("Database error:", err);
+    res.status(500).send("Server error: " + err.message);
   }
 });
 
