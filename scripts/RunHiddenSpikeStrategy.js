@@ -220,7 +220,7 @@ export default async function runHiddenSpikeStrategy() {
 async function checkSentiment(headline) {
   try {
     const response = await cohere.chat({
-      model: "command", // Cohere’s best reasoning model
+      model: "command-r7b-12-2024", // Cohere’s best reasoning model
       message: `Classify the sentiment of this headline as "positive", "negative" or "neutral": "${headline}"`,
       temperature: 0,
     });
