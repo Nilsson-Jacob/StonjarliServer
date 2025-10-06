@@ -143,11 +143,29 @@ export default async function runSellStocks() {
           );
         }
       } else {
-        aVerdict.push(
-          `Hold ${
-            stock.symbol
-          } - still within holding period - gain:) ${percentGain.toFixed(2)}%`
-        );
+        if (percentGain >= 11) {
+          await createOrder({
+            symbol: stock.symbol,
+            qty: Number(stock.qty),
+            side: "sell",
+            type: "trailing_stop",
+            trail_percent: 2,
+            time_in_force: "gtc",
+          });
+
+          console.log(`Set trailing stop for ${stock.symbol}`);
+          aVerdict.push(
+            `Trailing stop set for ${
+              stock.symbol
+            } -  beCaUse gain: ${percentGain.toFixed(2)}%`
+          );
+        } else {
+          aVerdict.push(
+            `Hold ${
+              stock.symbol
+            } - still within holding period - gain:) ${percentGain.toFixed(2)}%`
+          );
+        }
       }
     });
 
