@@ -88,15 +88,6 @@ app.get("/", (req, res) => {
 });
 
 app.get("/db", async (req, res) => {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS sentiments (
-      id SERIAL PRIMARY KEY,
-      headline TEXT NOT NULL,
-      sentiment VARCHAR(15) NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
-
   const aHSS = await runHiddenSpikeStrategy();
   await delay(1200); // prevent rate limit
 

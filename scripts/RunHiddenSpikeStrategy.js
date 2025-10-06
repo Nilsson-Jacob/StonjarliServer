@@ -71,6 +71,15 @@ const symbols = [
 export default async function runHiddenSpikeStrategy() {
   console.log("Running hidden spike scan for", symbols);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sentiments (
+      id SERIAL PRIMARY KEY,
+      headline TEXT NOT NULL,
+      sentiment VARCHAR(15) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
   const qualified = []; // Stores stocks that pass all filters
 
   for (const symbol of symbols) {
@@ -104,6 +113,8 @@ export default async function runHiddenSpikeStrategy() {
           n.headline
         )
       );
+      console.log("found?" + found);
+
       if (!found) continue; // Skip if no relevant news found
 
       //  🟢 NEW: check sentiment with Cohere
@@ -209,7 +220,7 @@ export default async function runHiddenSpikeStrategy() {
 async function checkSentiment(headline) {
   try {
     const response = await cohere.chat({
-      model: "command-r", // Cohere’s best reasoning model
+      model: "command", // Cohere’s best reasoning model
       message: `Classify the sentiment of this headline as "positive", "negative" or "neutral": "${headline}"`,
       temperature: 0,
     });
