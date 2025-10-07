@@ -150,8 +150,8 @@ export default async function runHiddenSpikeStrategy() {
   // 3️⃣ Sort qualified stocks by % gain (highest first)
   qualified.sort((a, b) => b.pct - a.pct);
 
-  // 4️⃣ Limit to top 5 spikes
-  const top = qualified.slice(0, 5);
+  // 4️⃣ Limit to top 12 spikes
+  const top = qualified.slice(0, 12);
 
   // 5️⃣ Apply regime filter to remove unsuitable stocks
   const filteredTop = await regimeFilter(top);
