@@ -109,10 +109,11 @@ export default async function runHiddenSpikeStrategy() {
 
       // Filter news for relevant catalysts
       const found = news.find((n) =>
-        /investment|partnership|strategic|stake|private investment|acquisition|merger|deal|collaboration|earnings beat|AI/i.test(
+        /investment|investor|partnership|strategic|stake|private investment|acquisition|merger|deal|collaboration|earnings beat|earnings surprise|guidance raise|forecast increase|profit|revenue growth|AI|artificial intelligence|launch|product release|breakthrough|innovation|approval|FDA|contract|order|award|expansion|market entry|joint venture|funding|backing|grant|buyback|dividend|surge|upgrade|price target|analyst upgrade|record|milestone|integration|OpenAI|NVIDIA|data center|cloud|semiconductor|chip|automation|robotics|autonomous|defense|space|renewable|battery/i.test(
           n.headline
         )
       );
+
       console.log("found?" + found);
 
       if (!found) continue; // Skip if no relevant news found
@@ -151,7 +152,7 @@ export default async function runHiddenSpikeStrategy() {
   qualified.sort((a, b) => b.pct - a.pct);
 
   // 4️⃣ Limit to top 12 spikes
-  const top = qualified.slice(0, 12);
+  const top = qualified.slice(0, 5);
 
   // 5️⃣ Apply regime filter to remove unsuitable stocks
   const filteredTop = await regimeFilter(top);
