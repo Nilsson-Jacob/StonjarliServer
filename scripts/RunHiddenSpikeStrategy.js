@@ -74,6 +74,12 @@ export default async function runHiddenSpikeStrategy() {
     return;
   }
 
+  console.log("🔍 Starting scan... keys check:", {
+    FINNHUB: !!FINNHUB_API_KEY,
+    ALPACA: !!ALPACA_KEY,
+    COHERE: !!process.env.COHERE_API_KEY,
+  });
+
   console.log("Running hidden spike scan for", symbols);
 
   await pool.query(`
@@ -159,9 +165,11 @@ export default async function runHiddenSpikeStrategy() {
   // 3️⃣ Sort qualified stocks by % gain (highest first)
   qualified.sort((a, b) => b.pct - a.pct);
 
+  console.log("these are qualified: " + qualified);
   // 4️⃣ Limit to top 12 spikes
   const top = qualified.slice(0, 5);
 
+  console.log("these are top: " + JSON.stringify(top[0]));
   // 5️⃣ Apply regime filter to remove unsuitable stocks
   const filteredTop = await regimeFilter(top);
 
