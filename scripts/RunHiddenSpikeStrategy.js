@@ -85,7 +85,7 @@ export default async function runHiddenSpikeStrategy() {
   `);
 
   const qualified = [];
-  const pctThreshold = 1; // change as desired (1 => 1%)
+  const pctThreshold = 3; // change as desired (1 => 1%)
 
   // the improved regex (you already used this)
   const catalystRegex = new RegExp(
@@ -114,7 +114,7 @@ export default async function runHiddenSpikeStrategy() {
       console.log(`💹 ${symbol}: ${pct.toFixed(2)}% change`);
 
       // news (expand window to 7d if you like)
-      const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      const from = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
       const to = new Date().toISOString().split("T")[0];
