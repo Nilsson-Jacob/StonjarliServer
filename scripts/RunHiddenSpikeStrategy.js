@@ -95,7 +95,7 @@ export default async function runHiddenSpikeStrategy() {
 
       // Calculate % price change
       const pct = ((current - previous) / previous) * 100;
-      if (pct < 5) continue; // Require at least 5% gain
+      if (pct < 1) continue; // Require at least 5% gain
 
       // 2️⃣ Fetch recent company news (last 3 days)
       const from = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
@@ -161,7 +161,7 @@ export default async function runHiddenSpikeStrategy() {
   for (const pick of filteredTop) {
     console.log("Buying spike:", pick.symbol);
     try {
-      await axios.post(
+      /* await axios.post(
         `${ALPACA_URL}/v2/orders`,
         {
           symbol: pick.symbol,
@@ -171,7 +171,7 @@ export default async function runHiddenSpikeStrategy() {
           time_in_force: "gtc",
         },
         { headers }
-      );
+      );*/
       console.log("✅ Bought", pick.symbol);
     } catch (err) {
       console.error("❌ Failed to buy spike:", pick.symbol, err.message);
