@@ -69,6 +69,11 @@ const symbols = [
 
 // Main function to detect and buy hidden spikes
 export default async function runHiddenSpikeStrategy() {
+  if (!FINNHUB_API_KEY) {
+    console.error("❌ FINNHUB_API_KEY missing — cannot run strategy!");
+    return;
+  }
+
   console.log("Running hidden spike scan for", symbols);
 
   await pool.query(`
@@ -106,6 +111,9 @@ export default async function runHiddenSpikeStrategy() {
       const { data: news } = await axios.get(`${BASE_URL}/company-news`, {
         params: { symbol, _from: from, to, token: FINNHUB_API_KEY },
       });
+
+      console.log(`📰 ${symbol} returned ${news.length} articles`);
+      news.slice(0, 5).forEach((n) => console.log(" -", n.headline));
 
       // Filter news for relevant catalysts
       const found = news.find((n) =>
