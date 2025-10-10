@@ -94,67 +94,42 @@ export default async function runHiddenSpikeStrategy() {
   const qualified = []; // Stores stocks that pass all filters
 
   for (const symbol of symbols) {
+    console.log(`🔎 Checking ${symbol}...`);
+
     try {
-      // 1️⃣ Get current and previous close price
       const { data: q } = await axios.get(`${BASE_URL}/quote`, {
         params: { symbol, token: FINNHUB_API_KEY },
       });
 
-      const current = q.c,
-        previous = q.pc;
-      if (!current || !previous) continue; // Skip if data is missing
+      const current = q.c;
+      const previous = q.pc;
+      console.log(`📊 ${symbol}: current=${current}, previous=${previous}`);
 
-      // Calculate % price change
+      if (!current || !previous) {
+        console.log(`⚠️ Skipping ${symbol}, missing quote data`);
+        continue;
+      }
+
       const pct = ((current - previous) / previous) * 100;
-      if (pct < 1) continue; // Require at least 5% gain
+      console.log(`💹 ${symbol}: ${pct.toFixed(2)}% change`);
 
-      // 2️⃣ Fetch recent company news (last 3 days)
-      const from = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
       const to = new Date().toISOString().split("T")[0];
 
       const { data: news } = await axios.get(`${BASE_URL}/company-news`, {
-        params: { symbol, _from: from, to, token: FINNHUB_API_KEY },
+        params: { symbol, from, to, token: FINNHUB_API_KEY },
       });
 
       console.log(`📰 ${symbol} returned ${news.length} articles`);
-      news.slice(0, 5).forEach((n) => console.log(" -", n.headline));
-
-      // Filter news for relevant catalysts
-      const found = news.find((n) =>
-        /investment|investor|partnership|strategic|stake|private investment|acquisition|merger|deal|collaboration|earnings beat|earnings surprise|guidance raise|forecast increase|profit|revenue growth|AI|artificial intelligence|launch|product release|breakthrough|innovation|approval|FDA|contract|order|award|expansion|market entry|joint venture|funding|backing|grant|buyback|dividend|surge|upgrade|price target|analyst upgrade|record|milestone|integration|OpenAI|NVIDIA|data center|cloud|semiconductor|chip|automation|robotics|autonomous|defense|space|renewable|battery/i.test(
-          n.headline
-        )
-      );
-
-      console.log("found?" + found);
-
-      if (!found) continue; // Skip if no relevant news found
-
-      //  🟢 NEW: check sentiment with Cohere
-      const sentiment = await checkSentiment(found.headline);
-      if (sentiment !== "positive") {
-        console.log(
-          `Skipping ${symbol}, headline not positive:`,
-          found.headline
-        );
-      } else {
-        console.log(
-          "positive sentiment: " +
-            sentiment +
-            " on headline : " +
-            found.headline
-        );
-        // Add stock to qualified list
-        qualified.push({ symbol, pct, newsHeadline: found.headline });
-        console.log(`Spike detected for ${symbol}: +${pct.toFixed(1)}%`);
-      }
     } catch (err) {
-      console.warn("Error scanning", symbol, err.message);
+      console.warn(`❌ Error scanning ${symbol}:`, err.message);
+      await delay(2000); // back off before next one
+      continue;
     }
 
-    await delay(1200); // Delay to prevent API rate limiting
+    await delay(1200);
   }
 
   if (qualified.length === 0) {
