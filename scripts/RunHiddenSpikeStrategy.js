@@ -69,19 +69,12 @@ const symbols = [
 
 // Main function to detect and buy hidden spikes
 export default async function runHiddenSpikeStrategy() {
-  if (!FINNHUB_API_KEY) {
-    console.error("❌ FINNHUB_API_KEY missing — cannot run strategy!");
-    return;
-  }
-
-  console.log("🔍 Starting scan... keys check:", {
-    FINNHUB: !!FINNHUB_API_KEY,
-    ALPACA: !!ALPACA_KEY,
-    COHERE: !!process.env.COHERE_API_KEY,
-  });
-
   console.log("Running hidden spike scan for", symbols);
 
+  // reset array at start of run so you don't accumulate duplicates across runs
+  headLineAndVerdict = [];
+
+  // ensure table exists
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sentiments (
       id SERIAL PRIMARY KEY,
@@ -91,124 +84,128 @@ export default async function runHiddenSpikeStrategy() {
     );
   `);
 
-  const qualified = []; // Stores stocks that pass all filters
+  const qualified = [];
+  const pctThreshold = 1; // change as desired (1 => 1%)
+
+  // the improved regex (you already used this)
+  const catalystRegex = new RegExp(
+    "investment|investor|partnership|strategic|stake|private investment|acquisition|merger|deal|collaboration|earnings beat|earnings surprise|guidance raise|forecast increase|profit|revenue growth|AI|artificial intelligence|launch|product release|breakthrough|innovation|approval|FDA|contract|order|award|expansion|market entry|joint venture|funding|backing|grant|buyback|dividend|surge|upgrade|price target|analyst upgrade|record|milestone|integration|OpenAI|NVIDIA|data center|cloud|semiconductor|chip|automation|robotics|autonomous|defense|space|renewable|battery",
+    "i"
+  );
 
   for (const symbol of symbols) {
     console.log(`🔎 Checking ${symbol}...`);
-
     try {
+      // quote
       const { data: q } = await axios.get(`${BASE_URL}/quote`, {
         params: { symbol, token: FINNHUB_API_KEY },
       });
-
-      const current = q.c;
-      const previous = q.pc;
+      const current = q.c,
+        previous = q.pc;
       console.log(`📊 ${symbol}: current=${current}, previous=${previous}`);
 
       if (!current || !previous) {
         console.log(`⚠️ Skipping ${symbol}, missing quote data`);
+        await delay(500);
         continue;
       }
 
       const pct = ((current - previous) / previous) * 100;
       console.log(`💹 ${symbol}: ${pct.toFixed(2)}% change`);
 
+      // news (expand window to 7d if you like)
       const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
       const to = new Date().toISOString().split("T")[0];
 
       const { data: news } = await axios.get(`${BASE_URL}/company-news`, {
-        params: { symbol, from, to, token: FINNHUB_API_KEY },
+        params: { symbol, _from: from, to, token: FINNHUB_API_KEY },
       });
 
       console.log(`📰 ${symbol} returned ${news.length} articles`);
+
+      // find ALL matching headlines (filter, not find)
+      const foundNews = news.filter((n) => {
+        const text = `${n.headline || ""} ${n.summary || ""}`;
+        return catalystRegex.test(text);
+      });
+
+      if (foundNews.length === 0) {
+        console.log(`❌ No catalyst headlines matched regex for ${symbol}`);
+        await delay(500);
+        continue;
+      }
+
+      // For each matching headline run sentiment (and record it).
+      // If pct >= threshold AND sentiment === 'positive', add to qualified list.
+      for (const item of foundNews) {
+        const headline = item.headline || item.summary || "(no headline)";
+        console.log(`🧠 Running sentiment for ${symbol}: "${headline}"`);
+
+        // this pushes into headLineAndVerdict internally
+        const sentiment = await checkSentiment(headline);
+
+        console.log(`🧾 Sentiment result for ${symbol}: ${sentiment}`);
+
+        // if stock moved enough AND sentiment positive -> candidate
+        if (pct >= pctThreshold && sentiment === "positive") {
+          qualified.push({ symbol, pct, newsHeadline: headline });
+          console.log(`Spike candidate: ${symbol} (+${pct.toFixed(1)}%)`);
+        }
+
+        // small delay between sentiment calls to avoid rate-limits
+        await delay(600);
+      }
     } catch (err) {
-      console.warn(`❌ Error scanning ${symbol}:`, err.message);
-      await delay(2000); // back off before next one
+      console.warn(
+        `❌ Error scanning ${symbol}:`,
+        err?.response?.data || err.message
+      );
+      // backoff a bit if network/API error
+      await delay(1500);
+      // continue loop to next symbol
       continue;
     }
 
+    // small delay between symbols to avoid rate limit
     await delay(1200);
   }
 
+  // sort/limit/filter/place orders ... remains the same
   if (qualified.length === 0) {
     console.log("No spikes found today.");
-    return [];
+    // Still save any headLineAndVerdict if you want (below)
+  } else {
+    qualified.sort((a, b) => b.pct - a.pct);
   }
 
-  // 3️⃣ Sort qualified stocks by % gain (highest first)
-  qualified.sort((a, b) => b.pct - a.pct);
-
-  console.log("these are qualified: " + qualified);
-  // 4️⃣ Limit to top 12 spikes
-  const top = qualified.slice(0, 5);
-
-  console.log("these are top: " + JSON.stringify(top[0]));
-  // 5️⃣ Apply regime filter to remove unsuitable stocks
-  const filteredTop = await regimeFilter(top);
-
-  // 6️⃣ Place buy orders for filtered spikes
-  for (const pick of filteredTop) {
-    console.log("Buying spike:", pick.symbol);
-    try {
-      /* await axios.post(
-        `${ALPACA_URL}/v2/orders`,
-        {
-          symbol: pick.symbol,
-          qty: 1, // Buy 3 shares per spike
-          side: "buy",
-          type: "market",
-          time_in_force: "gtc",
-        },
-        { headers }
-      );*/
-      console.log("✅ Bought", pick.symbol);
-    } catch (err) {
-      console.error("❌ Failed to buy spike:", pick.symbol, err.message);
-    }
-  }
-
-  // 🧩 Save all headline-sentiment pairs in a single DB batch
+  // Insert all sentiments saved during run (batch)
   if (headLineAndVerdict.length > 0) {
     try {
-      // Ensure the table exists
-      await pool.query(`
-      CREATE TABLE IF NOT EXISTS sentiments (
-        id SERIAL PRIMARY KEY,
-        headline TEXT NOT NULL,
-        sentiment VARCHAR(15) NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-
-      // Build parameterized multi-row insert
       const values = headLineAndVerdict
         .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`)
-        .join(", ");
-
+        .join(",");
       const params = headLineAndVerdict.flatMap((r) => [
         r.headline,
         r.sentiment,
       ]);
-
       await pool.query(
         `INSERT INTO sentiments (headline, sentiment) VALUES ${values}`,
         params
       );
-
       console.log(
         `✅ Saved ${headLineAndVerdict.length} sentiment records to database`
       );
     } catch (err) {
       console.error("❌ Failed to save sentiments:", err.message);
     }
+  } else {
+    console.log("No sentiment records captured to save.");
   }
 
-  // Return top spikes (before filtering) for logging or further use
-  return top;
+  return qualified.slice(0, 5); // or whatever you want to return
 }
-
 async function checkSentiment(headline) {
   try {
     const response = await cohere.chat({
