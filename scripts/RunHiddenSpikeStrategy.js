@@ -69,143 +69,155 @@ const symbols = [
 
 // Main function to detect and buy hidden spikes
 export default async function runHiddenSpikeStrategy() {
-  console.log("Running hidden spike scan for", symbols);
+  // ⚠️ Purge all sentiment data
+  try {
+    await pool.query("TRUNCATE TABLE sentiments RESTART IDENTITY;");
+    console.log("🗑️ All sentiment records purged");
+    res
+      .status(200)
+      .json({ message: "All sentiment records deleted successfully." });
+  } catch (err) {
+    console.error("❌ Failed to purge sentiments:", err.message);
+    res.status(500).json({ error: "Failed to purge sentiment data." });
+  }
 
-  // reset array at start of run so you don't accumulate duplicates across runs
-  headLineAndVerdict = [];
+  if (!FINNHUB_API_KEY) {
+    console.error("❌ Missing FINNHUB_API_KEY");
+    return [];
+  }
 
-  // ensure table exists
+  console.log("🚀 Starting hidden spike scan...");
+  console.log("API Keys:", {
+    FINNHUB: !!FINNHUB_API_KEY,
+    ALPACA: !!ALPACA_KEY,
+    COHERE: !!process.env.COHERE_API_KEY,
+  });
+
+  // Make sure sentiments table exists
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sentiments (
       id SERIAL PRIMARY KEY,
+      symbol VARCHAR(10) NOT NULL,
       headline TEXT NOT NULL,
       sentiment VARCHAR(15) NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
 
-  const qualified = [];
-  const pctThreshold = 3; // change as desired (1 => 1%)
-
-  // the improved regex (you already used this)
-  const catalystRegex = new RegExp(
-    "investment|investor|partnership|strategic|stake|private investment|acquisition|merger|deal|collaboration|earnings beat|earnings surprise|guidance raise|forecast increase|profit|revenue growth|AI|artificial intelligence|launch|product release|breakthrough|innovation|approval|FDA|contract|order|award|expansion|market entry|joint venture|funding|backing|grant|buyback|dividend|surge|upgrade|price target|analyst upgrade|record|milestone|integration|OpenAI|NVIDIA|data center|cloud|semiconductor|chip|automation|robotics|autonomous|defense|space|renewable|battery",
-    "i"
-  );
+  const potentialBuys = [];
 
   for (const symbol of symbols) {
-    console.log(`🔎 Checking ${symbol}...`);
+    console.log(`\n🔎 Checking ${symbol}...`);
     try {
-      // quote
       const { data: q } = await axios.get(`${BASE_URL}/quote`, {
         params: { symbol, token: FINNHUB_API_KEY },
       });
-      const current = q.c,
-        previous = q.pc;
-      console.log(`📊 ${symbol}: current=${current}, previous=${previous}`);
 
-      if (!current || !previous) {
-        console.log(`⚠️ Skipping ${symbol}, missing quote data`);
-        await delay(500);
-        continue;
-      }
+      const current = q.c;
+      const previous = q.pc;
+      if (!current || !previous) continue;
 
       const pct = ((current - previous) / previous) * 100;
-      console.log(`💹 ${symbol}: ${pct.toFixed(2)}% change`);
+      console.log(`📊 ${symbol}: ${pct.toFixed(2)}% change`);
 
-      // news (expand window to 7d if you like)
-      const from = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      // Skip if small move
+      if (Math.abs(pct) < 1.0) continue;
+
+      // Get last 3 days of company news
+      const from = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
       const to = new Date().toISOString().split("T")[0];
 
       const { data: news } = await axios.get(`${BASE_URL}/company-news`, {
-        params: { symbol, _from: from, to, token: FINNHUB_API_KEY },
+        params: { symbol, from, to, token: FINNHUB_API_KEY },
       });
 
       console.log(`📰 ${symbol} returned ${news.length} articles`);
+      if (!news.length) continue;
 
-      // find ALL matching headlines (filter, not find)
-      const foundNews = news.filter((n) => {
-        const text = `${n.headline || ""} ${n.summary || ""}`;
-        return catalystRegex.test(text);
-      });
+      // Find relevant headline
+      const found = news.find((n) =>
+        /investment|partnership|strategic|stake|acquisition|merger|deal|collaboration|earnings beat|AI|contract|defense|launch|OpenAI|upgrade/i.test(
+          n.headline
+        )
+      );
 
-      if (foundNews.length === 0) {
-        console.log(`❌ No catalyst headlines matched regex for ${symbol}`);
-        await delay(500);
-        continue;
-      }
+      if (!found) continue;
 
-      // For each matching headline run sentiment (and record it).
-      // If pct >= threshold AND sentiment === 'positive', add to qualified list.
-      for (const item of foundNews) {
-        const headline = item.headline || item.summary || "(no headline)";
-        console.log(`🧠 Running sentiment for ${symbol}: "${headline}"`);
+      console.log(`🧠 Checking sentiment for: "${found.headline}"`);
+      const sentiment = await checkSentiment(found.headline);
 
-        // this pushes into headLineAndVerdict internally
-        const sentiment = await checkSentiment(headline);
-
-        console.log(`🧾 Sentiment result for ${symbol}: ${sentiment}`);
-
-        // if stock moved enough AND sentiment positive -> candidate
-        if (pct >= pctThreshold && sentiment === "positive") {
-          qualified.push({ symbol, pct, newsHeadline: headline });
-          console.log(`Spike candidate: ${symbol} (+${pct.toFixed(1)}%)`);
-        }
-
-        // small delay between sentiment calls to avoid rate-limits
-        await delay(600);
+      if (sentiment === "positive") {
+        potentialBuys.push({
+          symbol,
+          pct,
+          headline: found.headline,
+          sentiment,
+        });
       }
     } catch (err) {
-      console.warn(
-        `❌ Error scanning ${symbol}:`,
-        err?.response?.data || err.message
-      );
-      // backoff a bit if network/API error
-      await delay(1500);
-      // continue loop to next symbol
-      continue;
+      console.warn(`❌ Error scanning ${symbol}:`, err.message);
     }
 
-    // small delay between symbols to avoid rate limit
     await delay(1200);
   }
 
-  // sort/limit/filter/place orders ... remains the same
-  if (qualified.length === 0) {
-    console.log("No spikes found today.");
-    // Still save any headLineAndVerdict if you want (below)
-  } else {
-    qualified.sort((a, b) => b.pct - a.pct);
+  if (potentialBuys.length === 0) {
+    console.log("No potential buys found today.");
+    return [];
   }
 
-  // Insert all sentiments saved during run (batch)
-  if (headLineAndVerdict.length > 0) {
+  // Apply regime filter
+  console.log("🧩 Applying regime filter...");
+  const filtered = await regimeFilter(potentialBuys);
+  console.log(
+    `✅ ${filtered.length} passed regime filter: ${filtered
+      .map((s) => s.symbol)
+      .join(", ")}`
+  );
+
+  const successfulBuys = [];
+
+  for (const pick of filtered) {
     try {
-      const values = headLineAndVerdict
-        .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`)
-        .join(",");
-      const params = headLineAndVerdict.flatMap((r) => [
-        r.headline,
-        r.sentiment,
-      ]);
+      console.log(`💰 Placing buy order for ${pick.symbol}`);
+      await axios.post(
+        `${ALPACA_URL}/v2/orders`,
+        {
+          symbol: pick.symbol,
+          qty: 1,
+          side: "buy",
+          type: "market",
+          time_in_force: "gtc",
+        },
+        { headers }
+      );
+      console.log(`✅ Bought ${pick.symbol}`);
+
+      // Save only bought ones to DB
       await pool.query(
-        `INSERT INTO sentiments (headline, sentiment) VALUES ${values}`,
-        params
+        `INSERT INTO sentiments (symbol, headline, sentiment) VALUES ($1, $2, $3)`,
+        [pick.symbol, pick.headline, pick.sentiment]
       );
-      console.log(
-        `✅ Saved ${headLineAndVerdict.length} sentiment records to database`
-      );
+
+      successfulBuys.push(pick);
     } catch (err) {
-      console.error("❌ Failed to save sentiments:", err.message);
+      console.error(`❌ Failed to buy ${pick.symbol}:`, err.message);
     }
-  } else {
-    console.log("No sentiment records captured to save.");
   }
 
-  return qualified.slice(0, 5); // or whatever you want to return
+  if (successfulBuys.length === 0) {
+    console.log("No buys were executed.");
+  } else {
+    console.log(
+      `🎯 Final buys: ${successfulBuys.map((b) => b.symbol).join(", ")}`
+    );
+  }
+
+  return successfulBuys;
 }
+
 async function checkSentiment(headline) {
   try {
     const response = await cohere.chat({
