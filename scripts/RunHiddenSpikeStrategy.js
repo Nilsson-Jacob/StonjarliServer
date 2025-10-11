@@ -108,6 +108,7 @@ export default async function runHiddenSpikeStrategy() {
 
   for (const symbol of symbols) {
     console.log(`\n🔎 Checking ${symbol}...`);
+    await delay(1200);
     try {
       const { data: q } = await axios.get(`${BASE_URL}/quote`, {
         params: { symbol, token: FINNHUB_API_KEY },
@@ -121,7 +122,7 @@ export default async function runHiddenSpikeStrategy() {
       console.log(`📊 ${symbol}: ${pct.toFixed(2)}% change`);
 
       // Skip if small move
-      if (Math.abs(pct) < 1.0) continue;
+      if (Math.abs(pct) < 5.0) continue;
 
       // Get last 3 days of company news
       const from = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
