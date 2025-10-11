@@ -24,6 +24,7 @@ import yahooFinance from "yahoo-finance2";
 import runPEADStrategy from "./scripts/RunPEADStrategy.js";
 import runHiddenSpikeStrategy from "./scripts/RunHiddenSpikeStrategy.js";
 import runSellStocks from "./scripts/runSellStocks.js";
+import runGoodNewsStrategy from "./scripts/RunGoodNewsStrategy.js";
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -259,6 +260,11 @@ app.get("/runpead", async (req, res) => {
 
 app.get("/runhis", async (req, res) => {
   const picks = await runHiddenSpikeStrategy();
+  res.json({ picks });
+});
+
+app.get("/runGoodNews", async (req, res) => {
+  const picks = await runGoodNewsStrategy();
   res.json({ picks });
 });
 

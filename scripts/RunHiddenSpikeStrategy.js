@@ -5,6 +5,8 @@ import axios from "axios";
 import regimeFilter from "../filters/RegimeFilter.js";
 import pool from "../db/db.js";
 
+bVHX4abnMXEVHJvUjAM3FG7GiMinwOuyJUu2QFge;
+
 // API keys
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 const ALPACA_KEY = process.env.ALPACA_API_KEY;
