@@ -46,7 +46,7 @@ async function checkSentiment(headline) {
 
     const response = await cohere.chat({
       model: "command-r7b-12-2024", // Cohere’s best reasoning model
-      message: `Is it a good time to invest in the SFM stock (Sprouts Farmers Market, Inc.)?"`,
+      message: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if it is positive or negative?"`,
       temperature: 0,
     });
 
