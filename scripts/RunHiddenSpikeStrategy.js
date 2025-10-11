@@ -73,12 +73,12 @@ export default async function runHiddenSpikeStrategy() {
   try {
     await pool.query("TRUNCATE TABLE sentiments RESTART IDENTITY;");
     console.log("🗑️ All sentiment records purged");
-    res
+    /*res
       .status(200)
-      .json({ message: "All sentiment records deleted successfully." });
+      .json({ message: "All sentiment records deleted successfully." });*/
   } catch (err) {
     console.error("❌ Failed to purge sentiments:", err.message);
-    res.status(500).json({ error: "Failed to purge sentiment data." });
+    /* res.status(500).json({ error: "Failed to purge sentiment data." });*/
   }
 
   if (!FINNHUB_API_KEY) {
