@@ -44,11 +44,17 @@ async function checkSentiment(headline) {
       temperature: 0,
     });*/
 
-    const response = await cohere.generate({
-      model: "command-r7b-12-2024", // Cohere’s best reasoning model
-      prompt: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if it is positive or negative?"`,
+    const response = await cohere.chat({
+      model: "command-r7b-12-2024", // replaces "command-r"
+      messages: [
+        {
+          role: "user",
+          content: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if sentiment is positive or negative. 
+Keep the answer extremely short — only one of: "positive", "negative", or "neutral".`,
+        },
+      ],
       temperature: 0,
-      max_tokens: 5,
+      max_tokens: 5, // same behavior as before
     });
 
     return response;
