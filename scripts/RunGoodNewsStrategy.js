@@ -48,7 +48,7 @@ async function checkSentiment(headline) {
       model: "command-r7b-12-2024", // replaces "command-r"
       message: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if the outlook is positive or negative, give it on a scale 1-10, 1 being very negative and 10 being very positive, support the claim with reasons.`,
       temperature: 0,
-      max_tokens: 5, // same behavior as before
+      //max_tokens: 5, // same behavior as before
     });
 
     return response;
