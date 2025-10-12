@@ -46,8 +46,7 @@ async function checkSentiment(headline) {
 
     const response = await cohere.chat({
       model: "command-r7b-12-2024", // replaces "command-r"
-      message: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if sentiment is positive or negative. 
-Keep the answer extremely short — only one of: "positive", "negative", or "neutral".`,
+      message: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if the outlook is positive or negative, give it on a scale 1-10, 1 being very negative and 10 being very positive, support the claim with reasons.`,
       temperature: 0,
       max_tokens: 5, // same behavior as before
     });
