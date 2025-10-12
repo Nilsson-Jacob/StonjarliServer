@@ -44,7 +44,7 @@ async function checkSentiment(headline) {
       temperature: 0,
     });*/
 
-    const response = await cohere.chat({
+    const response = await cohere.generate({
       model: "command-r7b-12-2024", // Cohere’s best reasoning model
       message: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if it is positive or negative?"`,
       temperature: 0,
