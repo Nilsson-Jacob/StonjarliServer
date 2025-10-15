@@ -95,7 +95,7 @@ export default async function runHiddenSpikeStrategy() {
 
   // Make sure sentiments table exists
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS sentiments (
+    CREATE TABLE IF NOT EXISTS sentimentsV2 (
       id SERIAL PRIMARY KEY,
       symbol VARCHAR(10) NOT NULL,
       headline TEXT NOT NULL,
@@ -198,7 +198,7 @@ export default async function runHiddenSpikeStrategy() {
 
       // Save only bought ones to DB
       await pool.query(
-        `INSERT INTO sentiments (symbol, headline, sentiment) VALUES ($1, $2, $3)`,
+        `INSERT INTO sentimentsV2 (symbol, headline, sentiment) VALUES ($1, $2, $3)`,
         [pick.symbol, pick.headline, pick.sentiment]
       );
 

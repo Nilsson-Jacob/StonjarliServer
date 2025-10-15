@@ -99,6 +99,8 @@ app.get("/db", async (req, res) => {
   res.json(selectResult.rows);
 });
 
+app.post("/beerMe", async (req, res) => {});
+
 app.get("/sentiments", async (req, res) => {
   const selectResult = await pool.query("SELECT * FROM sentiments;");
 
