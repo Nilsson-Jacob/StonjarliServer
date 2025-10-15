@@ -21,11 +21,16 @@ const ALPACA_BASE = process.env.ALPACA_BASE_URL;
 // === Configurable parameters ===
 const PRICE_MIN = 5; // Minimum stock price
 const PRICE_MAX = 100; // Maximum stock price
-const MIN_INTRADAY_VOLUME = 500_000; // Minimum intraday volume for liquidity
-const MIN_ADV10 = 500_000; // Minimum average daily volume over 10 days
-const MIN_MOMENTUM_PCT = 0.03; // Minimum price increase from previous close (+3%)
-const MIN_EPS_SURPRISE_RATIO = 1.2; // Minimum EPS surprise (20% beat)
+//const MIN_INTRADAY_VOLUME = 500_000; // Minimum intraday volume for liquidity
+//const MIN_ADV10 = 500_000; // Minimum average daily volume over 10 days
+//const MIN_MOMENTUM_PCT = 0.03; // Minimum price increase from previous close (+3%)
+//const MIN_EPS_SURPRISE_RATIO = 1.2; // Minimum EPS surprise (20% beat)
 const MAX_CANDIDATES = 5; // Max number of stocks to consider per run
+
+const MIN_EPS_SURPRISE_RATIO = 1.06; // 5 % beat
+const MIN_MOMENTUM_PCT = 0.015; // 1 % move
+const MIN_INTRADAY_VOLUME = 200_000;
+const MIN_ADV10 = 200_000;
 
 // Risk management parameters for position sizing
 const RISK_PCT_OF_EQUITY = 0.005; // 0.5% of equity per trade
@@ -137,7 +142,10 @@ function earningsPass(e) {
   )
     return false;
 
-  const revenueBeat = safeNum(e.revenueActual) > safeNum(e.revenueEstimate);
+  //const revenueBeat = safeNum(e.revenueActual) > safeNum(e.revenueEstimate);
+  const revenueBeat =
+    safeNum(e.revenueActual) >= 0.94 * safeNum(e.revenueEstimate);
+
   return epsA / epsE >= MIN_EPS_SURPRISE_RATIO && revenueBeat;
 }
 
