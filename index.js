@@ -92,7 +92,7 @@ app.get("/db", async (req, res) => {
   const aHSS = await runHiddenSpikeStrategy();
   await delay(1200); // prevent rate limit
 
-  const selectResult = await pool.query("SELECT * FROM sentiments;");
+  const selectResult = await pool.query("SELECT * FROM sentimentsV2;");
   console.log("All rows:", selectResult.rows);
 
   // 4️⃣ Send result to client
