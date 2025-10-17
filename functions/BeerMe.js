@@ -1,3 +1,6 @@
+import axios from "axios";
+import pool from "../db/db.js";
+
 export default async function BeerMe() {
   // Make sure sentiments table exists
   await pool.query(`
