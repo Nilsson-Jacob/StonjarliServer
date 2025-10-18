@@ -13,6 +13,8 @@ const ALPACA_SECRET = process.env.ALPACA_API_SECRET;
 const BASE_URL = "https://finnhub.io/api/v1";
 const ALPACA_URL = process.env.ALPACA_BASE_URL;
 
+const MARKETAUX_KEY = process.env.MARKETAUX_API_KEY;
+
 // Headers for Alpaca orders
 const headers = {
   "APCA-API-KEY-ID": ALPACA_KEY,
@@ -33,7 +35,13 @@ let headLineAndVerdict = [];
 
 // Main function to detect and buy hidden spikes
 export default async function runGoodNewsStrategy() {
-  return checkSentiment("test");
+  /* Add here the call to marketaux, my api key is in .env file as MARKETAUX_API_KEY  */
+  // ---- NEW: pull latest news from Marketaux ----
+  const news = await fetchLatestNews(); // <-- add this
+  if (!news.length) return "no news";
+
+  const top = news[0].title; // use latest headline
+  return checkSentiment(top);
 }
 
 async function checkSentiment(headline) {
@@ -46,15 +54,33 @@ async function checkSentiment(headline) {
 
     const response = await cohere.chat({
       model: "command-r7b-12-2024", // replaces "command-r"
-      message: `Do a quick analysis of the SFM stock (Sprouts Farmers Market, Inc.), and tell me if the outlook is positive or negative, give it on a scale 1-10, 1 being very negative and 10 being very positive, support the claim with reasons.`,
+      message: `Do you think this headline will have a positive effect on stock price: ${headline} `,
       temperature: 0,
       //max_tokens: 5, // same behavior as before
     });
 
-    return response;
+    return { AI: response, headline: headline };
   } catch (err) {
-    console.error("Cohere sentiment check failed:", err.message);
-    return "neutral";
+    return "err in sentiment check" + err.message;
+  }
+}
+
+// ---- NEW helper ----
+async function fetchLatestNews() {
+  try {
+    const r = await axios.get("https://api.marketaux.com/v1/news/all", {
+      params: {
+        language: "en",
+        filter_entities: true,
+        limit: 1,
+        // you can add symbols: "AAPL" etc.
+        api_token: MARKETAUX_KEY,
+      },
+    });
+    return r.data?.data ?? [];
+  } catch (err) {
+    console.error("Marketaux err:", err.message);
+    return [];
   }
 }
 
