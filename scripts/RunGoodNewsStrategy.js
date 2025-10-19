@@ -15,6 +15,40 @@ const ALPACA_URL = process.env.ALPACA_BASE_URL;
 
 const MARKETAUX_KEY = process.env.MARKETAUX_API_KEY;
 
+const symbols = [
+  "TSLA",
+  "NIO",
+  "LCID",
+  "RIVN",
+  "CHPT",
+  "BLNK",
+  "NVDA",
+  "AMD",
+  "INTC",
+  "PLTR",
+  "SMCI",
+  "AI",
+  "MRNA",
+  "NVAX",
+  "BNTX",
+  "CRSP",
+  "VRTX",
+  "JOBY",
+  "RKLB",
+  "LMT",
+  "BA",
+  "SNOW",
+  "NET",
+  "DDOG",
+  "MDB",
+  "SHOP",
+  "COIN",
+  "PLTR",
+  "CVNA",
+  "GME",
+  "AMC",
+  "ROKU",
+];
 // Headers for Alpaca orders
 const headers = {
   "APCA-API-KEY-ID": ALPACA_KEY,
@@ -40,9 +74,15 @@ export default async function runGoodNewsStrategy() {
   const news = await fetchLatestNews(); // <-- add this
   if (!news.length) return "no news";
 
-  //const top = news[0].title; // use latest headline
-  return news[0];
-  return checkSentiment(top);
+  const top = news[0].title; // use latest headline
+
+  let array = [];
+  for (let i = 0; i < news.length; i++) {
+    array.push(checkSentiment[news[i].title]);
+  }
+
+  return array;
+  //return checkSentiment(top);
 }
 
 async function checkSentiment(headline) {
@@ -73,7 +113,8 @@ async function fetchLatestNews() {
       params: {
         language: "en",
         filter_entities: true,
-        limit: 1,
+        limit: 3,
+        symbols: symbols.join(","), // <<< pass list here
         // you can add symbols: "AAPL" etc.
         api_token: MARKETAUX_KEY,
       },
