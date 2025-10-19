@@ -78,8 +78,10 @@ export default async function runGoodNewsStrategy() {
 
   let array = [];
   for (let i = 0; i < news.length; i++) {
-    array.push(checkSentiment[news[i].title]);
+    array.push(await checkSentiment[news[i].title]);
   }
+
+  let a = await Promise.all(array);
 
   return array;
   //return checkSentiment(top);
