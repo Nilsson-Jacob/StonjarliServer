@@ -49,6 +49,41 @@ const symbols = [
   "AMC",
   "ROKU",
 ];
+
+const pharmaSymbols = [
+  "MRNA",
+  "BNTX",
+  "NVAX",
+  "CRSP",
+  "VRTX",
+  "REGN",
+  "GILD",
+  "BIIB",
+  "ILMN",
+  "AMGN",
+  "MRK",
+  "PFE",
+  "LLY",
+  "BMY",
+  "AZN",
+  "SGEN",
+  "BMRN",
+  "TWST",
+  "NTLA",
+  "EDIT",
+  "RARE",
+  "SRPT",
+  "ALXN",
+  "ACAD",
+  "SNY",
+  "BHC",
+  "JAZZ",
+  "INO",
+  "BEAM",
+  "ZLAB",
+  "NBIX",
+];
+
 // Headers for Alpaca orders
 const headers = {
   "APCA-API-KEY-ID": ALPACA_KEY,
@@ -71,21 +106,68 @@ let headLineAndVerdict = [];
 export default async function runGoodNewsStrategy() {
   /* Add here the call to marketaux, my api key is in .env file as MARKETAUX_API_KEY  */
   // ---- NEW: pull latest news from Marketaux ----
-  const news = await fetchLatestNews(); // <-- add this
+  //const news = await fetchLatestNews(); // <-- add this
+
+  const news = await fetchLatestNews();
   if (!news.length) return "no news";
 
   const top = news[0].title; // use latest headline
 
   let array = [];
   for (let i = 0; i < news.length; i++) {
-    let temp = await checkSentiment([news[i].title]);
+    let temp = checkSentiment([news[i].title], news[i].entities);
     array.push(temp);
   }
 
   let a = await Promise.all(array);
 
-  return array;
+  return a;
   //return checkSentiment(top);
+}
+
+// classify headline with Cohere — request JSON-like output
+async function classifyHeadlineWithCohere(headline, entities = []) {
+  const systemPrompt = `
+You are an assistant that classifies pharma headlines for trading decisions.
+Return JSON ONLY with keys: event_type, polarity, confidence.
+event_type ∈ ["fda_approval","fda_rejection","trial_result","earnings","safety_issue","partnership","other"].
+polarity ∈ ["positive","neutral","negative"].
+confidence: float between 0 and 1.
+`;
+  const userPrompt = `Headline: "${headline}"\nEntities: ${JSON.stringify(
+    entities
+  )}`;
+
+  try {
+    const resp = await cohere.chat({
+      model: "command-r7b-12-2024",
+      message: `${systemPrompt}\n${userPrompt}`,
+      temperature: 0,
+    });
+
+    // Cohere response structure may vary. Try to read text safely:
+    const raw = resp.output?.[0]?.content?.[0]?.text || resp.output_text || "";
+    // Try to parse JSON from the model output
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed;
+    } catch (e) {
+      // fallback: attempt to extract JSON-looking substring
+      const match = raw.match(/(\{[\s\S]*\})/);
+      if (match) {
+        try {
+          return JSON.parse(match[1]);
+        } catch (e2) {
+          /* fallthrough */
+        }
+      }
+      // final fallback - return safe neutral
+      return { event_type: "other", polarity: "neutral", confidence: 0.5 };
+    }
+  } catch (err) {
+    console.error("Cohere error:", err.message || err);
+    return { event_type: "other", polarity: "neutral", confidence: 0.5 };
+  }
 }
 
 async function checkSentiment(headline) {
@@ -117,7 +199,7 @@ async function fetchLatestNews() {
         language: "en",
         filter_entities: true,
         limit: 3,
-        symbols: symbols.join(","), // <<< pass list here
+        symbols: pharmaSymbols.join(","), // <<< pass list here
         // you can add symbols: "AAPL" etc.
         api_token: MARKETAUX_KEY,
       },
