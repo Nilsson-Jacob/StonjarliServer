@@ -40,7 +40,8 @@ export default async function runGoodNewsStrategy() {
   const news = await fetchLatestNews(); // <-- add this
   if (!news.length) return "no news";
 
-  const top = news[0].title; // use latest headline
+  //const top = news[0].title; // use latest headline
+  return news[0];
   return checkSentiment(top);
 }
 
