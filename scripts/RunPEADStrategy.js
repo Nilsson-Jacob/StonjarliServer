@@ -27,7 +27,7 @@ const PRICE_MAX = 100; // Maximum stock price
 //const MIN_EPS_SURPRISE_RATIO = 1.2; // Minimum EPS surprise (20% beat)
 const MAX_CANDIDATES = 5; // Max number of stocks to consider per run
 
-const MIN_EPS_SURPRISE_RATIO = 1.06; // 5 % beat
+const MIN_EPS_SURPRISE_RATIO = 1.03; // changed to 3 . 5 % beat
 const MIN_MOMENTUM_PCT = 0.0; // 21st OCT 0.015; // 1 % move
 const MIN_INTRADAY_VOLUME = 200_000;
 const MIN_ADV10 = 200_000;
