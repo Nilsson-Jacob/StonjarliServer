@@ -118,7 +118,9 @@ export default async function runGoodNewsStrategy() {
   for (let i = 0; i < news.length; i++) {
     let temp = await classifyHeadlineWithCohere(
       news[i].title,
-      news[i].entities
+      news[i].entities,
+      news[i].snippet,
+      news[i].description
     );
     array.push({
       answer: temp,
@@ -134,7 +136,12 @@ export default async function runGoodNewsStrategy() {
 }
 
 // classify headline with Cohere — request JSON-like output
-async function classifyHeadlineWithCohere(headline, entities = []) {
+async function classifyHeadlineWithCohere(
+  headline,
+  entities = [],
+  snippet = "",
+  description = ""
+) {
   const systemPrompt = `
 You are an assistant that classifies pharma headlines for trading decisions.
 Return JSON ONLY with keys: event_type, polarity, confidence.
@@ -144,7 +151,7 @@ confidence: float between 0 and 1.
 `;
   const userPrompt = `Headline: "${headline}"\nEntities: ${JSON.stringify(
     entities
-  )}`;
+  )}\n snippet: ${snippet}\n description: ${description}`;
 
   try {
     const resp = await cohere.chat({
@@ -167,27 +174,6 @@ confidence: float between 0 and 1.
   } catch (err) {
     console.error("Cohere error:", err.message || err);
     return { event_type: "other", polarity: "neutral", confidence: 0.5 };
-  }
-}
-
-async function checkSentiment(headline) {
-  try {
-    /*const response = await cohere.chat({
-      model: "command-r7b-12-2024", // Cohere’s best reasoning model
-      message: `Classify the sentiment of this headline as "positive", "negative" or "neutral": "${headline}"`,
-      temperature: 0,
-    });*/
-
-    const response = await cohere.chat({
-      model: "command-r7b-12-2024", // replaces "command-r"
-      message: `Do you think this headline will have a positive effect on stock price: ${headline} `,
-      temperature: 0,
-      //max_tokens: 5, // same behavior as before
-    });
-
-    return { AI: response, headline: headline };
-  } catch (err) {
-    return "err in sentiment check" + err.message;
   }
 }
 
