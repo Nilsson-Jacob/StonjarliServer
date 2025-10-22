@@ -115,8 +115,12 @@ export default async function runGoodNewsStrategy() {
 
   let array = [];
   for (let i = 0; i < news.length; i++) {
-    let temp = checkSentiment([news[i].title], news[i].entities);
-    array.push(temp);
+    let temp = classifyHeadlineWithCohere(news[i].title, news[i].entities);
+    array.push({
+      answer: temp,
+      news: news[i].title,
+      entities: news[i].entities,
+    });
   }
 
   let a = await Promise.all(array);
