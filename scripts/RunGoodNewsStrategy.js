@@ -186,7 +186,7 @@ async function fetchLatestNews() {
       params: {
         language: "en",
         filter_entities: true,
-        limit: 3,
+        limit: 10,
         symbols: pharmaSymbols.join(","), // <<< pass list here
         // you can add symbols: "AAPL" etc.
         api_token: MARKETAUX_KEY,
