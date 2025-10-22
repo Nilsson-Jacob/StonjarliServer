@@ -145,7 +145,7 @@ async function classifyHeadlineWithCohere(
   description = ""
 ) {
   const systemPrompt = `
-You are an assistant that classifies pharma headlines for trading decisions.
+You are an assistant that classifies pharma headlines, snippet and description for trading decisions.
 Return JSON ONLY with keys: event_type, polarity, confidence.
 event_type ∈ ["fda_approval","fda_rejection","trial_result","earnings","safety_issue","partnership","other"].
 polarity ∈ ["positive","neutral","negative"].
