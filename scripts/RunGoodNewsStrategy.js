@@ -153,14 +153,15 @@ confidence: float between 0 and 1.
       temperature: 0,
     });
 
-    console.log("=== RAW COHERE ===");
-    console.log(JSON.stringify(resp, null, 2)); // <---- ADD THIS
+    let raw = resp.text || "{}";
 
-    const raw = resp.output_text || "{}";
+    // strip code fences
+    raw = raw.replace(/```json\s*|```/g, "").trim();
+
     try {
       return JSON.parse(raw);
-    } catch {
-      console.log("Cohere returned:", raw);
+    } catch (err) {
+      console.log("Failed to parse Cohere output:", raw);
       return { event_type: "other", polarity: "neutral", confidence: 0.0 };
     }
   } catch (err) {
