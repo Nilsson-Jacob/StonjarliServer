@@ -277,14 +277,14 @@ app.get("/runStrat", async (req, res) => {
 
     //const aHSS = await runHiddenSpikeStrategy();
     //await delay(1200); // prevent rate limit
-    runHiddenSpikeStrategy().then(() => console.log((e) => console.log(e)));
+    //runHiddenSpikeStrategy().then(() => console.log((e) => console.log(e)));
 
     const aSellOrders = await runSellStocks();
     await delay(1200); // prevent rate limit
 
     let response = {
       pead: aPeadStrat,
-      hss: "In the logs",
+      hss: "Not run right now",
       sellOrders: aSellOrders,
     };
 

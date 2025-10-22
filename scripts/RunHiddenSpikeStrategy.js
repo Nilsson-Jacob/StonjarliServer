@@ -183,7 +183,7 @@ export default async function runHiddenSpikeStrategy() {
   for (const pick of filtered) {
     try {
       console.log(`💰 Placing buy order for ${pick.symbol}`);
-      await axios.post(
+      /* await axios.post(
         `${ALPACA_URL}/v2/orders`,
         {
           symbol: pick.symbol,
@@ -193,7 +193,7 @@ export default async function runHiddenSpikeStrategy() {
           time_in_force: "gtc",
         },
         { headers }
-      );
+      );*/
       console.log(`✅ Bought ${pick.symbol}`);
 
       // Save only bought ones to DB
