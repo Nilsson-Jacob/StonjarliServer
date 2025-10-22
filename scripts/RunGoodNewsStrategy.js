@@ -114,8 +114,12 @@ export default async function runGoodNewsStrategy() {
   const top = news[0].title; // use latest headline
 
   let array = [];
+
   for (let i = 0; i < news.length; i++) {
-    let temp = classifyHeadlineWithCohere(news[i].title, news[i].entities);
+    let temp = await classifyHeadlineWithCohere(
+      news[i].title,
+      news[i].entities
+    );
     array.push({
       answer: temp,
       news: news[i].title,
@@ -123,9 +127,9 @@ export default async function runGoodNewsStrategy() {
     });
   }
 
-  let a = await Promise.all(array);
+  //let a = await Promise.all(array);
 
-  return a;
+  return array;
   //return checkSentiment(top);
 }
 
@@ -152,22 +156,8 @@ confidence: float between 0 and 1.
     // Cohere response structure may vary. Try to read text safely:
     const raw = resp.output?.[0]?.content?.[0]?.text || resp.output_text || "";
     // Try to parse JSON from the model output
-    try {
-      const parsed = JSON.parse(raw);
-      return parsed;
-    } catch (e) {
-      // fallback: attempt to extract JSON-looking substring
-      const match = raw.match(/(\{[\s\S]*\})/);
-      if (match) {
-        try {
-          return JSON.parse(match[1]);
-        } catch (e2) {
-          /* fallthrough */
-        }
-      }
-      // final fallback - return safe neutral
-      return { event_type: "other", polarity: "neutral", confidence: 0.5 };
-    }
+
+    return raw;
   } catch (err) {
     console.error("Cohere error:", err.message || err);
     return { event_type: "other", polarity: "neutral", confidence: 0.5 };
