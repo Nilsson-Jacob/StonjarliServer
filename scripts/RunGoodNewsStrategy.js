@@ -126,6 +126,8 @@ export default async function runGoodNewsStrategy() {
       answer: temp,
       news: news[i].title,
       entities: news[i].entities,
+      snippet: news[i].snippet,
+      description: news[i].description,
     });
   }
 
