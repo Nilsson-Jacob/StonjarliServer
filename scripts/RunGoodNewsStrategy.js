@@ -153,6 +153,9 @@ confidence: float between 0 and 1.
       temperature: 0,
     });
 
+    console.log("=== RAW COHERE ===");
+    console.log(JSON.stringify(resp, null, 2)); // <---- ADD THIS
+
     const raw = resp.output_text || "{}";
     try {
       return JSON.parse(raw);
