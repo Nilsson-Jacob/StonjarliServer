@@ -153,11 +153,13 @@ confidence: float between 0 and 1.
       temperature: 0,
     });
 
-    // Cohere response structure may vary. Try to read text safely:
-    const raw = resp.output?.[0]?.content?.[0]?.text || resp.output_text || "";
-    // Try to parse JSON from the model output
-
-    return raw;
+    const raw = resp.output_text || "{}";
+    try {
+      return JSON.parse(raw);
+    } catch {
+      console.log("Cohere returned:", raw);
+      return { event_type: "other", polarity: "neutral", confidence: 0.0 };
+    }
   } catch (err) {
     console.error("Cohere error:", err.message || err);
     return { event_type: "other", polarity: "neutral", confidence: 0.5 };
