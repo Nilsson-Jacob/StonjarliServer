@@ -89,8 +89,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/db", async (req, res) => {
-  const aHSS = await runGoodNewsStrategy();
-  await delay(1200); // prevent rate limit
+  //const aHSS = await runGoodNewsStrategy();
+  //await delay(1200); // prevent rate limit
 
   const selectResult = await pool.query("SELECT * FROM GOODNEWS;");
   console.log("All rows:", selectResult.rows);
