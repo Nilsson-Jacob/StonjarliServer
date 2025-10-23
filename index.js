@@ -89,10 +89,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/db", async (req, res) => {
-  const aHSS = await runHiddenSpikeStrategy();
+  const aHSS = await runGoodNewsStrategy();
   await delay(1200); // prevent rate limit
 
-  const selectResult = await pool.query("SELECT * FROM sentimentsV2;");
+  const selectResult = await pool.query("SELECT * FROM GOODNEWS;");
   console.log("All rows:", selectResult.rows);
 
   // 4️⃣ Send result to client
@@ -102,7 +102,7 @@ app.get("/db", async (req, res) => {
 app.post("/beerMe", async (req, res) => {});
 
 app.get("/sentiments", async (req, res) => {
-  const selectResult = await pool.query("SELECT * FROM GOODNEWS");
+  const selectResult = await pool.query("SELECT * FROM GOODNEWS;");
 
   res.json(selectResult.rows);
 });
