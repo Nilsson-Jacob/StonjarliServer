@@ -107,6 +107,16 @@ export default async function runGoodNewsStrategy() {
   /* Add here the call to marketaux, my api key is in .env file as MARKETAUX_API_KEY  */
   // ---- NEW: pull latest news from Marketaux ----
   //const news = await fetchLatestNews(); // <-- add this
+  // Make sure sentiments table exists
+  await pool.query(`
+      CREATE TABLE IF NOT EXISTS GOODNEWS (
+        id SERIAL PRIMARY KEY,
+        symbol VARCHAR(10) NOT NULL,
+        headline TEXT NOT NULL,
+        event VARCHAR(30) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
 
   const news = await fetchLatestNews();
   if (!news.length) return "no news";
@@ -129,6 +139,11 @@ export default async function runGoodNewsStrategy() {
       snippet: news[i].snippet,
       description: news[i].description,
     });
+
+    await pool.query(
+      `INSERT INTO GOODNEWS (symbol, headline, event) VALUES ($1, $2, $3)`,
+      [news[i].entities[0], news[i].title, temp]
+    );
   }
 
   //let a = await Promise.all(array);

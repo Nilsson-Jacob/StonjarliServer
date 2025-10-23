@@ -102,7 +102,7 @@ app.get("/db", async (req, res) => {
 app.post("/beerMe", async (req, res) => {});
 
 app.get("/sentiments", async (req, res) => {
-  const selectResult = await pool.query("SELECT * FROM sentimentsV2;");
+  const selectResult = await pool.query("SELECT * FROM GOODNEWS");
 
   res.json(selectResult.rows);
 });
