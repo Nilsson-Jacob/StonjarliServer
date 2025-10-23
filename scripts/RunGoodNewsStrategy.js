@@ -143,7 +143,7 @@ export default async function runGoodNewsStrategy() {
 
     await pool.query(
       `INSERT INTO GOODNEWS (symbol, headline, event) VALUES ($1, $2, $3)`,
-      [news[i].entities[0].symbol, news[i].title, temp]
+      [news[i].entities[0].symbol, news[i].title, temp.event_type]
     );
   }
 
