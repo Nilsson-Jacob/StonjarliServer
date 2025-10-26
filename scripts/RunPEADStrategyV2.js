@@ -80,10 +80,10 @@ function toISODate(d) {
 // === Timing logic ===
 // Determine which earnings dates to pull based on today
 function getDatesToCheck() {
-  //const today = new Date();
+  const today = new Date();
 
   //const today = new Date("2025-10-23");
-  const today = new Date("2025-10-23T17:00:00+01:00");
+  //const today = new Date("2025-10-23T17:00:00+01:00");
 
   console.log("todahy: " + today.toISOString());
   const weekday = today.getDay();
