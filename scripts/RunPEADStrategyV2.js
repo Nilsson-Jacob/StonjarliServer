@@ -23,6 +23,29 @@ const MIN_MOMENTUM_PCT = 0.0; // 21st OCT 0.015; // 1 % move
 const MIN_INTRADAY_VOLUME = 200_000;
 const MIN_ADV10 = 200_000;
 
+// Price momentum filter: require a positive reaction
+function momentumPass(current, previousClose) {
+  console.log(
+    "momentum? " + (current - previousClose) / previousClose >= MIN_MOMENTUM_PCT
+  );
+  return (current - previousClose) / previousClose >= MIN_MOMENTUM_PCT;
+}
+
+// Liquidity filter: ensure the stock is tradable
+function liquidityPass(price, intradayVol) {
+  console.log(
+    "liquid? " + price >= PRICE_MIN &&
+      price <= PRICE_MAX &&
+      intradayVol >= MIN_INTRADAY_VOLUME
+  );
+
+  return (
+    price >= PRICE_MIN &&
+    price <= PRICE_MAX &&
+    intradayVol >= MIN_INTRADAY_VOLUME
+  );
+}
+
 // Alpaca order headers
 const headers = {
   "APCA-API-KEY-ID": ALPACA_KEY,
@@ -56,7 +79,9 @@ function toISODate(d) {
 function getDatesToCheck() {
   //const today = new Date();
 
-  const today = new Date("2025-10-23");
+  //const today = new Date("2025-10-23");
+  const today = new Date("2025-10-23T17:00:00+01:00");
+
   console.log("todahy: " + today.toISOString());
   const weekday = today.getDay();
   const dates = [];
@@ -189,7 +214,7 @@ export default async function runPEADStrategy() {
 
         // Apply liquidity & momentum filters
         if (
-          liquidityPass(current, intradayVol, adv10) &&
+          liquidityPass(current, intradayVol) &&
           momentumPass(current, previousClose)
         ) {
           qualified.push({
