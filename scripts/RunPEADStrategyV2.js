@@ -258,7 +258,7 @@ export default async function runPEADStrategy() {
       try {
         const test = await placeBuy(stock.symbol, qty);
 
-        console.log("Test response: " + JSON.stringify(test));
+        console.log("Order placed:", test.data);
         // If above does not work
         //console.log("buying for : " + candidates);
         //const body = {
