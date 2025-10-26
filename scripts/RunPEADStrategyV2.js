@@ -28,7 +28,10 @@ function momentumPass(current, previousClose) {
   console.log(
     "momentum? " + (current - previousClose) / previousClose >= MIN_MOMENTUM_PCT
   );
-  return (current - previousClose) / previousClose >= MIN_MOMENTUM_PCT;
+  return (
+    (current - previousClose) / previousClose >= MIN_MOMENTUM_PCT &&
+    current < 50
+  );
 }
 
 // Liquidity filter: ensure the stock is tradable
@@ -215,8 +218,7 @@ export default async function runPEADStrategy() {
         // Apply liquidity & momentum filters
         if (
           // liquidityPass(current, intradayVol) &&
-          // momentumPass(current, previousClose)
-          true
+          momentumPass(current, previousClose)
         ) {
           qualified.push({
             ...e,
