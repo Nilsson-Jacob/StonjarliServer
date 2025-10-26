@@ -214,13 +214,14 @@ export default async function runPEADStrategy() {
 
         // Apply liquidity & momentum filters
         if (
-          liquidityPass(current, intradayVol) &&
-          momentumPass(current, previousClose)
+          // liquidityPass(current, intradayVol) &&
+          // momentumPass(current, previousClose)
+          true
         ) {
           qualified.push({
             ...e,
             price: current,
-            momentumPct: (current - previousClose) / previousClose,
+            // momentumPct: (current - previousClose) / previousClose,
             surpriseRatio: safeNum(e.epsActual) / safeNum(e.epsEstimate),
           });
         }
@@ -237,8 +238,7 @@ export default async function runPEADStrategy() {
     // Step 2: Sort by EPS surprise (then momentum), limit to MAX_CANDIDATES
     const ranked = qualified
       .sort(
-        (a, b) =>
-          b.surpriseRatio - a.surpriseRatio || b.momentumPct - a.momentumPct
+        (a, b) => b.surpriseRatio - a.surpriseRatio //|| b.momentumPct - a.momentumPct
       )
       .slice(0, MAX_CANDIDATES);
 
