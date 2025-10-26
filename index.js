@@ -21,7 +21,7 @@ import yahooFinance from "yahoo-finance2";
 //const runHiddenSpikeStrategy = require("./scripts/RunHiddenSpikeStrategy.js");
 //const runSellStocks = require("./scripts/runSellStocks.js");
 
-import runPEADStrategy from "./scripts/RunPEADStrategy.js";
+import runPEADStrategy from "./scripts/RunPEADStrategyV2.js";
 import runHiddenSpikeStrategy from "./scripts/RunHiddenSpikeStrategy.js";
 import runSellStocks from "./scripts/runSellStocks.js";
 import runGoodNewsStrategy from "./scripts/RunGoodNewsStrategy.js";
