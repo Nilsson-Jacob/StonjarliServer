@@ -209,7 +209,7 @@ export default async function runPEADStrategy() {
 
         const current = safeNum(quote?.c);
         const previousClose = safeNum(quote?.pc);
-        //const intradayVol = safeNum(quote?.v);
+        const intradayVol = safeNum(quote?.v);
         //const { adv10 } = await getMetrics(symbol);
 
         // Apply liquidity & momentum filters
