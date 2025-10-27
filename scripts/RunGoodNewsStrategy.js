@@ -145,6 +145,8 @@ export default async function runGoodNewsStrategy() {
       `INSERT INTO GOODNEWS (symbol, headline, event) VALUES ($1, $2, $3)`,
       [news[i].entities[0].symbol, news[i].title, temp.event_type]
     );
+
+    console.log("inserted in DB: " + temp.event_type);
   }
 
   //let a = await Promise.all(array);

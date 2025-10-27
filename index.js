@@ -101,8 +101,17 @@ app.get("/db", async (req, res) => {
 
 app.post("/beerMe", async (req, res) => {});
 
-app.get("/sentiments", async (req, res) => {
-  const selectResult = await pool.query("SELECT * FROM GOODNEWS;");
+app.get("/sentiments/:date", async (req, res) => {
+  const { date } = req.params;
+
+  let newDate = new Date(date);
+
+  console.log("datened? ", newDate);
+
+  const selectResult = await pool.query(
+    "SELECT * FROM GOODNEWS where created_at >= ($S1)",
+    newDate
+  );
 
   res.json(selectResult.rows);
 });
@@ -280,6 +289,9 @@ app.get("/runStrat", async (req, res) => {
     //runHiddenSpikeStrategy().then(() => console.log((e) => console.log(e)));
 
     const aSellOrders = await runSellStocks();
+    await delay(1200); // prevent rate limit
+
+    const picks = await runGoodNewsStrategy();
     await delay(1200); // prevent rate limit
 
     let response = {
