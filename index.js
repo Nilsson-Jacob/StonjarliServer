@@ -109,7 +109,7 @@ app.get("/sentiments/:date", async (req, res) => {
   console.log("datened? ", newDate);
 
   const selectResult = await pool.query(
-    "SELECT * FROM GOODNEWS where created_at >= $1",
+    "SELECT * FROM GOODNEWS where created_at < $1",
     [newDate]
   );
 
