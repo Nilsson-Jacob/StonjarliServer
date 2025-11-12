@@ -291,8 +291,8 @@ app.get("/runStrat", async (req, res) => {
     const aSellOrders = await runSellStocks();
     await delay(1200); // prevent rate limit
 
-    const picks = await runGoodNewsStrategy();
-    await delay(1200); // prevent rate limit
+    //const picks = await runGoodNewsStrategy();
+    //await delay(1200); // prevent rate limit
 
     let response = {
       pead: aPeadStrat,
