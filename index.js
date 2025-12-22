@@ -12,6 +12,7 @@ import axios from "axios";
 import multer from "multer";
 import OpenAI from "openai";
 import fs from "fs";
+import path from "path";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -408,7 +409,17 @@ app.get("/earnings", async (req, res) => {
 
 /* ----- AI -------- */
 
-const upload = multer({ dest: "uploads/" });
+//const upload = multer({ dest: "uploads/" });
+
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname); // .webm
+    cb(null, `${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({ storage });
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
