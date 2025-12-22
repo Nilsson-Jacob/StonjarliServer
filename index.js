@@ -417,6 +417,10 @@ const openai = new OpenAI({
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
     const filePath = req.file.path;
+    console.log("file path: " + filePath);
+
+    console.log(req.file.mimetype);
+    console.log(req.file.originalname);
 
     const transcription = await openai.audio.transcriptions.create({
       file: fs.createReadStream(filePath),
