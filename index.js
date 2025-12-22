@@ -442,8 +442,43 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     fs.unlinkSync(filePath);
 
     res.json({ text: transcription.text });
+
+    const structured = await extractDailyData(transcription.text);
+    console.log(JSON.stringify(structured));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Transcription failed" });
   }
 });
+
+async function extractDailyData(transcript) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: `
+You extract structured daily life data.
+Return ONLY valid JSON.
+Do not include explanations.
+`,
+      },
+      {
+        role: "user",
+        content: `
+Transcript:
+"${transcript}"
+
+Extract:
+- activities (array of short strings)
+- energy_level (low | medium | high)
+- social_level (low | medium | high)
+- rating (the rating that they gave)
+`,
+      },
+    ],
+  });
+
+  return JSON.parse(response.choices[0].message.content);
+}
