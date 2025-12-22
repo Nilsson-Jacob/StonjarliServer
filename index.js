@@ -473,7 +473,6 @@ Transcript:
 Extract:
 - activities (array of short strings)
 - energy_level (low | medium | high)
-- social_level (low | medium | high)
 - rating (the rating that they gave)
 `,
       },
