@@ -9,6 +9,10 @@ import pool from "./db/db.js";
 import axios from "axios";
 //const cors = require("cors");
 
+import multer from "multer";
+import OpenAI from "openai";
+import fs from "fs";
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -399,5 +403,32 @@ app.get("/earnings", async (req, res) => {
   } catch (err) {
     console.error("Error fetching earnings from Finnhub:", err.message);
     res.send([]);
+  }
+});
+
+/* ----- AI -------- */
+
+const upload = multer({ dest: "uploads/" });
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+app.post("/transcribe", upload.single("audio"), async (req, res) => {
+  try {
+    const filePath = req.file.path;
+
+    const transcription = await openai.audio.transcriptions.create({
+      file: fs.createReadStream(filePath),
+      model: "whisper-1",
+    });
+
+    // 🔥 IMPORTANT: delete audio immediately
+    fs.unlinkSync(filePath);
+
+    res.json({ text: transcription.text });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Transcription failed" });
   }
 });
