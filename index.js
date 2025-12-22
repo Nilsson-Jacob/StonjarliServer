@@ -441,10 +441,10 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     // 🔥 IMPORTANT: delete audio immediately
     fs.unlinkSync(filePath);
 
-    res.json({ text: transcription.text });
-
     const structured = await extractDailyData(transcription.text);
     console.log(JSON.stringify(structured));
+
+    res.json({ text: transcription.text, structured: structured });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Transcription failed" });
