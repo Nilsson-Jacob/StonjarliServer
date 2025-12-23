@@ -455,6 +455,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     const { data, error } = await supabase
       .from("daily_entries")
       .insert({
+        user_id: "23",
         structured: structured,
       })
       .select();
