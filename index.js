@@ -13,6 +13,7 @@ import multer from "multer";
 import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
+import { createClient } from "@supabase/supabase-js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -425,6 +426,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
     const filePath = req.file.path;
@@ -444,7 +450,12 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     const structured = await extractDailyData(transcription.text);
     console.log(JSON.stringify(structured));
 
-    res.json({ text: transcription.text, structured: structured });
+    let todos = [];
+
+    let temp = await supabase.from("daily_entries").select();
+    todos.push(temp);
+
+    res.json({ text: transcription.text, structured: structured, temp: temp });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Transcription failed" });
