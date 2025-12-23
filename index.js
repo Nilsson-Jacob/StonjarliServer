@@ -453,6 +453,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     let todos = [];
 
     let insert = await supabase.from("daily_entries").insert({
+      id: 5,
       structured: structured,
     });
 
