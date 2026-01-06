@@ -475,6 +475,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
   }
 });
 
+/* Before changing to more training focused application
 async function extractDailyData(transcript) {
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -504,4 +505,39 @@ Extract:
   });
 
   return JSON.parse(response.choices[0].message.content);
+}
+
+*/
+
+async function extractDailyData(transcript) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: `
+Extract structured fitness data from a short training transcript.
+Return ONLY valid JSON with a single key "activities".
+Each activity should include:
+- activity_type (bench/squat/deadlift/run/etc)
+- anchor_metric (main metric for that activity, e.g., {weight: 100, sets: 5, reps: 3})
+Do NOT include transcript or context.
+Return as an array under "activities".
+`,
+      },
+      {
+        role: "user",
+        content: transcript,
+      },
+    ],
+  });
+
+  try {
+    const structured = JSON.parse(response.choices[0].message.content);
+    return structured;
+  } catch (err) {
+    console.error("Failed to parse JSON:", response.choices[0].message.content);
+    throw err;
+  }
 }
