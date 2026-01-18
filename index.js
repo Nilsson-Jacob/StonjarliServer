@@ -520,6 +520,7 @@ async function extractDailyData(transcript) {
 Extract structured fitness data from a short training transcript.
 Return ONLY valid JSON with a single key "activities".
 Each activity should include:
+- training_type (gym/run/cycle/etc)
 - activity_type (bench/squat/deadlift/run/etc)
 - anchor_metric (main metric for that activity, e.g., {weight: 100, sets: 5, reps: 3})
 Do NOT include transcript or context.
