@@ -475,6 +475,32 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
   }
 });
 
+app.post("/targets", async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { targets } = req.body;
+
+  const { data, error } = await supabase
+    .from("daily_entries")
+    .upsert(
+      {
+        entry_date: today,
+        targets: targets,
+      },
+      {
+        onConflict: "entry_date", // this is the key part
+      }
+    )
+    .select();
+
+  if (error) {
+    console.error("UPSERT ERROR:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.json(data);
+});
+
 /* Before changing to more training focused application
 async function extractDailyData(transcript) {
   const response = await openai.chat.completions.create({
