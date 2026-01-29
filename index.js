@@ -463,13 +463,27 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
 
     let todos = [];
 
-    const { data, error } = await supabase
+    /*const { data, error } = await supabase
       .from("daily_entries")
       .insert({
         structured: structured,
         entry_date: new Date().toISOString().slice(0, 10),
         user_id: user.id,
       })
+      .select(); */
+
+    const { data, error } = await supabase
+      .from("daily_entries")
+      .upsert(
+        {
+          structured: structured,
+          entry_date: new Date().toISOString().slice(0, 10),
+          user_id: user.id,
+        },
+        {
+          onConflict: ["entry_date", "user_id"], // update instead of insert
+        }
+      )
       .select();
 
     if (error) {
@@ -477,7 +491,10 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       throw error;
     }
 
-    let temp = await supabase.from("daily_entries").select();
+    let temp = await supabase
+      .from("daily_entries")
+      .select("*")
+      .eq("user_id", user.id);
     todos.push(temp);
 
     res.json({ text: transcription.text, structured: structured, temp: temp });
