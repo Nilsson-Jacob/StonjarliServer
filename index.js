@@ -433,6 +433,17 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const filePath = req.file.path;
     console.log("file path: " + filePath);
 
@@ -457,6 +468,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       .insert({
         structured: structured,
         entry_date: new Date().toISOString().slice(0, 10),
+        user_id: user.id,
       })
       .select();
 
@@ -492,6 +504,19 @@ app.post("/targets", async (req, res) => {
       }
     )
     .select();
+
+  if (error) {
+    console.error("UPSERT ERROR:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.json(data);
+});
+
+app.get("/targets", async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await supabase.from("targets").select().select();
 
   if (error) {
     console.error("UPSERT ERROR:", error);
