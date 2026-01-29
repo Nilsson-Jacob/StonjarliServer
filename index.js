@@ -486,7 +486,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     res.status(500).json({ error: "Transcription failed" });
   }
 });
-
+/*
 app.post("/targets", async (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -511,12 +511,50 @@ app.post("/targets", async (req, res) => {
   }
 
   return res.json(data);
+});*/
+app.post("/targets", async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const { targets } = req.body;
+
+  // Get current session
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError || !session) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const user_id = session.user.id;
+
+  // Upsert with user_id
+  const { data, error } = await supabase
+    .from("daily_entries")
+    .upsert(
+      {
+        user_id,
+        entry_date: today,
+        targets,
+      },
+      {
+        onConflict: ["user_id", "entry_date"], // composite key
+      }
+    )
+    .select();
+
+  if (error) {
+    console.error("UPSERT ERROR:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.json(data);
 });
 
 app.get("/targets", async (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data, error } = await supabase.from("targets").select().select();
+  const { data, error } = await supabase.from("targets").select();
 
   if (error) {
     console.error("UPSERT ERROR:", error);
