@@ -533,29 +533,27 @@ app.post("/targets", async (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   const { targets } = req.body;
 
-  // Get current session
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
+  const token = req.headers.authorization?.replace("Bearer ", "");
 
-  if (sessionError || !session) {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const user_id = session.user.id;
-
-  // Upsert with user_id
   const { data, error } = await supabase
     .from("daily_entries")
     .upsert(
       {
-        user_id,
+        user_id: user.id,
         entry_date: today,
         targets,
       },
       {
-        onConflict: ["user_id", "entry_date"], // composite key
+        onConflict: ["user_id", "entry_date"],
       }
     )
     .select();
@@ -565,7 +563,7 @@ app.post("/targets", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  return res.json(data);
+  res.json(data);
 });
 
 app.get("/targets", async (req, res) => {
