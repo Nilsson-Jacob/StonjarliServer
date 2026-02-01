@@ -15,11 +15,6 @@ import fs from "fs";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // 🔥 important
-);
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -435,6 +430,11 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const supabaseAdmin = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY // 🔥 important
+);
 
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
