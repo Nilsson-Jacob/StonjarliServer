@@ -496,7 +496,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
         {
           user_id: user.id,
           entry_date: new Date().toISOString().slice(0, 10),
-          structured,
+          structured: structured,
         },
         { onConflict: ["user_id", "entry_date"] }
       )
@@ -554,7 +554,7 @@ app.post("/targets", async (req, res) => {
       {
         user_id: user.id,
         entry_date: today,
-        structured,
+        targets: targets,
       },
       { onConflict: ["user_id", "entry_date"] }
     )
