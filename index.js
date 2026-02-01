@@ -15,6 +15,11 @@ import fs from "fs";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
 
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // 🔥 important
+);
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -472,7 +477,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       })
       .select(); */
 
-    const { data, error } = await supabase
+    /*const { data, error } = await supabase
       .from("daily_entries")
       .upsert(
         {
@@ -483,6 +488,17 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
         {
           onConflict: ["entry_date", "user_id"], // update instead of insert
         }
+      )
+      .select();*/
+    const { data, error } = await supabaseAdmin
+      .from("daily_entries")
+      .upsert(
+        {
+          user_id: user.id,
+          entry_date: new Date().toISOString().slice(0, 10),
+          structured,
+        },
+        { onConflict: ["user_id", "entry_date"] }
       )
       .select();
 
@@ -503,32 +519,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     res.status(500).json({ error: "Transcription failed" });
   }
 });
-/*
-app.post("/targets", async (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
 
-  const { targets } = req.body;
-
-  const { data, error } = await supabase
-    .from("daily_entries")
-    .upsert(
-      {
-        entry_date: today,
-        targets: targets,
-      },
-      {
-        onConflict: "entry_date", // this is the key part
-      }
-    )
-    .select();
-
-  if (error) {
-    console.error("UPSERT ERROR:", error);
-    return res.status(500).json({ error: error.message });
-  }
-
-  return res.json(data);
-});*/
 app.post("/targets", async (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   const { targets } = req.body;
@@ -544,7 +535,7 @@ app.post("/targets", async (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { data, error } = await supabase
+  /*const { data, error } = await supabase
     .from("daily_entries")
     .upsert(
       {
@@ -555,6 +546,17 @@ app.post("/targets", async (req, res) => {
       {
         onConflict: ["user_id", "entry_date"],
       }
+    )
+    .select();*/
+  const { data, error } = await supabaseAdmin
+    .from("daily_entries")
+    .upsert(
+      {
+        user_id: user.id,
+        entry_date: today,
+        structured,
+      },
+      { onConflict: ["user_id", "entry_date"] }
     )
     .select();
 
